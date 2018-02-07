@@ -1,0 +1,149 @@
+Week 1: Rendering. Render a Block-based world in isometric view, as well as moving Figurines.
+Week 2: Implement Figurine Movement, block interaction and basic crafting.
+Week 3: Implement Items, Weapons and the full crafting tree. Implement some sort of multiplayer system.
+Week 4: Basic Particle Effects for most important actions, Personality System, Menu.
+
+Beide Spieler hat die Kontrolle über eine kleine Anzahl (3-9) Figuren in einer 3-dimensionalen Blockbasierten Welt.
+Jede Figur hat Lebenspunkte. Ziel ist es, alle Figuren der anderen Seite zu zerstören indem man ihre Lebenspunkte auf 0 reduziert.
+	Eine Figur mit 0 Lebenspunkten wird vom Spielfeld entfernt und kann keinerlei Aktionen mehr ausführen.
+Jede dieser Figuren kann sich in jedem Zeitschritt entlang jeder Achse bewegen um bis zu ein Feld bewegen. Wenn kein Block unter ihr ist, fällt sie solange, bis wieder ein Block unter ihr ist. Dies verursacht keinerlei Schaden.
+	Solange sie fällt kann sie weder Gegenstände benutzen noch sich bewegen. Sie kann allerdings bewegt werden.
+	Figuren benutzen A* als Wegsuchalgorithmus, wobei jeder Schritt des weges legal sein muss. D.h. fall eine Klippe den Weg versperrt wird der Weg nicht verfolgt.
+	Eine Figur kann niemals Blöcke betreten.
+Jede Figur kann bis zu zwei Gegenstände tragen. Der eine wird in den Händen getragen und kann benutzt werden. Der andere wird auf dem Rücken getragen und kann nicht verwendet werden.
+Wofür ein Gegenstand benutzt werden kann hängt von dem Gegenstand ab. So können Blöcke gesetzt und Wekzeuge und Waffen verwendet werden.
+Wenn kein Gegenstand in den Händen gehalten wird, wird implizit der Gegenstand "Faust" getragen.
+	Dieser kann wenige Arten von Blöcke abbauen, aber auch als Waffe verwendet werden kann und dann kleine Mengen an Schaden anrichtet.
+	Das Aufnehmen eines Gegenstandes in die Hände entfernt "Faust" automatisch. Beim Ablegen des Gegenstandes in den Händen wird automatisch "Faust" aufgenommen. "Faust" kann nicht abgelegt werden.
+	
+Figuren haben eine Anweisungsliste, von der in jedem Zeitschritt die erste Anweisung betrachtet wird.
+	Anweisungen sind die kleinsten Befehle, die einer Figur gegeben werden können.
+	So sind "zu diesem Ziel laufen" und "diesen Gegenstand benutzen" Anweisungen. Die zwischenschritte für diese Anweisungen sind allerdings selbst _keine_ Anweisungen.
+Eine Anweisung hat einen odere meherere Endbedingungen, nach der sie verworfen wird.
+	Beispielsweise wird eine Bewegungsaktion verworfen, wenn das Ziel erreicht wurde, oder aber auch wenn das Ziel nicht mehr erreichbar ist.
+	
+Einer der wichtigsten Aspekte ist das Abbauen und Setzen von Blöcken.
+	Im Inventar wird keine Unterscheidung zwischen Blöcken und Items getroffen, sie unterscheiden sich nur durch ihre Funktionalität.
+Um einen Block abzubauen muss eine Figur für eine bestimmte Zeit neben diesem stehen bleiben.
+	Sobald der Block abgebaut wurde, wird er automatisch auf den Rücken der Figur gepackt, falls dort Platz ist.
+		Alternative: Blöcke können nur abgebaut werden, wenn Platz für das resultierende Item ist.
+	Andernfalls verschwindet der Block permanent aus der Welt.
+	Manche Blöcke benötigen ein Werkzeug, um abgebaut zu werden.
+		Dieses muss in der Hand der Figur gehalten werden, bis sie den Block fertig abgebaut hat.
+Um einen Block zu setzen muss die Figur ihn in der Hand tragen und für eine bestimmte, wenn auch kürzere als beim Abbauen, Zeit neben dem Zielort stehen bleiben.
+	Dann wird der Block aus den Händen der Figur entfernt und am Zielort in der Welt platziert.
+Sollte es zu einem Konflikt kommen (i.e. zwei Figuren versuchen zum gleichen Zeitpunkt einen Block zu platzieren oder abzubauen),
+	wird beim abbauen der Block zerstört, ohne in ein Inventar getan zu werden,
+	und beim setzen beide Blöcke zerstört.
+	
+Zeit ist in diskrete Schritte unterteilt, welche bis zu wenige Sekunden auseinander liegen.
+	Folglich werden alle anstehenden Aktionen gleichzeitig ausgeführt.
+	Konflikte (wie z.B. zwei Figuren, die den gleichen Block abbauen) werden so gelöst, dass der zum Konflikt führende Teil der Handlung nicht passiert.
+	Dabei zählen nur solche Aktionen als Konflikt, welche GAR NICHT vereinbar sind.
+	So ist das Sterben einer Figur damit vereinbar, dass sie einen Block abbaut, nicht aber, dass zwei Figuren das gleiche Feld betreten.
+	
+-- Crafting --
+
+Beim Crafting werden 2 Items gegen 1 anderes Item eingetauscht. Damit bildet sich ein Graph der möglichen Täusche.
+	Dieser Graph ist kreisfrei, i.e. wenn ein Item in einem Tausch vorkommt, kann dieses Item nicht durch weitere Täusche mit den jeweiligen Resultaten wieder erreicht werden.
+		Der Graph ist also ein Baum.
+Resultate von Täusche tiefer im Baum sind im generellen in mindestens einer Eigenschaft stärker als alle Ergebnisse von Täuschen höher im Baum.
+Um zu tauschen muss eine Figur beide am Tausch beteiligten Items bei sich tragen, eines in den Händen und das andere auf dem Rücken.
+
+///////////////////////
+Dies ist für den Fall, dass die primitive Variante nicht 
+
+Manche Täusche benötigen nebst den Komponenten auch eine Crafting-Station und/oder Zeit.
+	Während des Tausches kann die tauschende Figur keine anderen Aktionen ausführen.
+Crafting-Stationen sind auch Ergebnisse von Täuschen.
+	Crafting-Stationen benötigen niemals Items, für die sie selbst direkt oder indirekt gebraucht werden.
+		D.h. wenn man sie im Baum mit beachtet bleibt dieser Kreisfrei.
+	Um diese Crafting-Station zu verwenden muss die tauschende Figur neben eben jener Station stehen, bis der Tausch vollzogen ist.
+		Falls die Crafting-Station abgebaut wird, während mit ihr getauscht wird, wird der Tausch unterbrochen. Dabei verwendete Items gehen verloren.
+		Konflikt?
+		
+//////////////////////
+
+-- Blöcke --
+
+Größe?
+Steinschichten?
+
+Die Welt besteht aus einer leicht bis stark hügeligen Landschaft mit Bäumen. 
+Diese Landschaft besteht in den obersten 2-3 Schichten aus Dreck, welcher schnell abgebaut und gesetzt werden kann.
+Darunter liegen mehrere Schichten Stein, die stark ausgehölt sind.
+	Stein braucht Werkzeug und mehr Zeit, um abgebaut zu werden. Setzen geht allerdings sehr schnell.
+Bäume liefern mit Holz die Basisresource.
+
+-- Waffen --
+
+Waffen werden verwendet, um gegnerischen Figuren große Mengen an Schaden zuzufügen.
+Wenn in einem Zeitschritt eine Figur die Anweisung hat, eine Waffe auf eine andere Figur zu feuern, wird zuerst überprüft, ob eine Sichtlinie zu der Figur besteht.
+Dann wird verglichen, ob die Manhatten-Distanz zum Ziel kleiner oder gleich als die Reichweite der Waffe ist.
+	Folglich bildet die Reichweite einen Würfel um die Figur.
+Sollte einer dieser beiden Vergleiche fehlschagen wird die Anweisung abgebrochen.
+Schließlich wird der "Aim-Counter" der Figur mit der Aim-Zeit der Waffe verglichen.
+Sollte dieser kleiner als die Aim-Zeit sein, wird er um 1 erhöht.
+Sollte dieser größer oder gleich der Aim-Zeit sein, wird der anvisierten Figur der Schaden der Waffe an Lebenspunkten abgezogen und der Aim-Counter wird auf 0 gesetzt.
+
+Die numerische Größe von Schaden ist dabei so gewählt, dass schon wenig Reduktion einen Unterschied in den benötigten Treffern bis zur Zerstörung des Zieles macht.
+
+Damit sind die 3 Eigenschaften einer Waffe:
+	Schaden (Wie viele Lebenspunkte abgezogen werden)
+	Reichweite (Auf wie viele Blöcke Distanz mit dieser Waffe geaimt werden kann)
+	Aim-Zeit (Wie lange es dauert, bis der Schaden zugefügt wird)
+		Die Aim-Zeit ist besonders insofern, dass sie dynamisch vom Ziel abhängt. 
+		So haben Aimzeiten generell die Form (Basis + Distanzmodifikator * Distanz). Basis und Distanzmodifikator hängen von der Waffe ab, während für Distanz die Distanz zum Ziel eingesetzt wird.
+		D.h. im generellen haben Waffen eine statische Grundaimzeit (Basis) und darauf addiert eine von der Distanz abhängige justierzeit (Distanzmodifikator * Distanz).
+			Anzumerken ist hierbei, dass der Aim-Counter unabhängig von der Aim-Zeit jedes mal um 1 steigt.
+			Wenn sich also die Distanz zum Ziel verändert, verändert sich die Zeit bis der Schaden zugefügt wird genau dann, wenn sich die justierzeit verändert.
+	
+Dabei gibt es 3 Gruppen an Waffen:
+
+Schwerter:
+	Schwerter haben eine Aim-Zeit von (1 + 0 * Distanz) und eine Reichweite von 1.
+	Damit ist ihr Schaden pro Sekunde gleich ihrem Schaden unabhängig von den Umständen.
+	Dafür muss die Figur allerdings direkt neben ihrem Ziel stehen, welches sich auch nicht bewegen darf.
+
+Projektilwaffen:
+	Projektilwaffen haben eine variable Grundaimzeit sowie justierzeit und eine Reichweite von mehreren bis vielen Blöcken.
+	Sie haben damit abhängig von ihren exakten Eigenschaften unterschiedliche Verwendungsweisen.
+	Im Generellen verursachen sie weniger Schaden pro Sekunde als Schwerter, allerdings auf Distanz.
+	
+Zepter:
+	Zepter haben eine variable, aber meist lange Grundaimzeit und keine justierzeit. Ihre Reichweite ist generell unendlich.
+	Sie verursachen ihren Schaden zwar auch direkt, aber immer mit einem Twist.
+	Um ein Zepter zu feuern muss die Figur ein von dem Zepter abhängiges Iten mit sich führen, das beim Verursachen des Schadens konsumiert wird.
+	Zepter haben generell das Potential, verherenden Schaden anzurichten. Dazu muss aber sowohl die recht lange Aimzeit durchlaufen und das richtige Item besorgt werden.
+	
+Zusätzlich gibt es Explosivstoffe:
+	Explosivstoffe verursachen Schaden in einem Radius um sich herum, sobald ein bestimmter Auslöser eintritt.
+	Vorher müssen sie allerdings platziert werden. Wie das funktionert hängt allerdings von dem Explosivstoff ab.
+	
+Um sich gegen Waffen zu verteidigen gibt es Rüstung.
+Rüstung ist genau dann auf einer Figur aktiv, wenn sie von dieser Figur auf dem Rücken getragen wird.
+Es gibt 3 Arten an Rüstung:
+
+Physische Rüstung:
+	Physische Rüstung zieht von jedem Schaden einen konstanten Wert ab.
+	Arten:
+		Iron Armor:
+			Made of 2 Iron
+			1 Damage Reduction
+		Steel Armor:
+			Made of 2 Steel
+			2 Damage Reduction
+		Enchanted Steel Armor:
+			Made of 1 Steel Armor and 1 Forcium
+			3 Damage Reduction
+	
+Magische Rüstung:
+	Magische Rüstung absorbiert eine bestimmte Anzahl an Treffern vollständig.
+	Sobald sie so viele Treffer absorbiert hat verschwindet sie.
+	Arten:
+		Enchanted Leather:
+			1 Absorption
+		Enchanted Iron:
+			2 Absorption
+		Enchanted Steel:
+			3 Absorption
