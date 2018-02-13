@@ -1,11 +1,11 @@
-#Log Console output to file
+#Log Console gameSendput to file
 
 import datetime
 import sys
 import os
 
 '''Defines a print function which:
-   - Outputs to the terminal
+   - gameSendputs to the terminal
    - Appends to a file with the datetime of execution as the filename
    - This file is put in a subfolder log created in the execution directory.'''
 

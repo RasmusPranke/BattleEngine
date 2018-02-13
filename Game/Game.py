@@ -7,13 +7,13 @@ from World import World
 from Actor import Actor
 from Blocks import BlockTypes
 from Log import print
-import GameToRenderInterface as GTRI
+import RenderInterface as RI
 
-def start(myOutPipe, myInPipe):
+def start(myInPipe):
   print("Starting!")
-  GTRI.initConnection(myOutPipe)
   game = Game(myInPipe)
   game.run()
+  RI.stop()
 
 #By adding key-function pairs to the actionlist, button functions
 #    can easily be modified at runtime

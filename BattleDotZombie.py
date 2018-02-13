@@ -1,1 +1,15 @@
+from multiprocessing import Process, Pipe
+from time import sleep
 
+import RenderInterface as RI
+import Game
+
+def exit():
+  print("Shutting down game!")
+  RI.stop()
+
+if __name__ == "__main__":
+  #from RenderTest import test
+  #test()
+  Game.start(RI.initilaizeRender())
+  exit()

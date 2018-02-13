@@ -1,7 +1,7 @@
 from Blocks import BlockTypes
 from Vectors import CardinalDirections
 import Vectors
-import GameToRenderInterface as GTRI
+import RenderInterface as RI
 from Log import print
 
 import math
@@ -46,4 +46,4 @@ class World:
 
         print("Creating objects!")
         for _ in self.grid.flat:
-          GTRI.createObject()
+          RI.createObject()

@@ -5,17 +5,17 @@ cardinalMap = {}
 
 class CardinalDirections(Enum):
     NORTH = (0, 1, 0)
-    SOUTH = (0, -1, 0)
+    SgameSendH = (0, -1, 0)
     EAST = (1, 0, 0)
     WEST = (-1, 0, 0)
     
     NORTHUP = (0, 1, 1)
-    SOUTHUP = (0, -1, 1)
+    SgameSendHUP = (0, -1, 1)
     EASTUP = (1, 0, 1)
     WESTUP = (-1, 0, 1)
     
     NORTHDOWN = (0, 1, -1)
-    SOUTHDOWN = (0, -1, -1)
+    SgameSendHDOWN = (0, -1, -1)
     EASTDOWN = (1, 0, -1)
     WESTDOWN = (-1, 0, -1)
     

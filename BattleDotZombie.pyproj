@@ -5,12 +5,13 @@
     <ProjectGuid>eea9f39a-ae3a-476b-8da9-8bc6d0b43631</ProjectGuid>
     <ProjectHome>.</ProjectHome>
     <StartupFile>BattleDotZombie.py</StartupFile>
-    <SearchPath>
-    </SearchPath>
+    <SearchPath>Debug;Game</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>BattleDotZombie</Name>
     <RootNamespace>BattleDotZombie</RootNamespace>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,25 +22,38 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Actor.py" />
     <Compile Include="BattleDotZombie.py" />
-    <Compile Include="Blocks.py" />
-    <Compile Include="Compile.py" />
-    <Compile Include="CPPInterfaceTest.py" />
-    <Compile Include="Game.py" />
-    <Compile Include="GameToRenderInterface.py" />
-    <Compile Include="GameToRenderInterfaceTest.py" />
-    <Compile Include="Inventory.py" />
-    <Compile Include="Items.py" />
-    <Compile Include="Launch.py" />
-    <Compile Include="Log.py" />
-    <Compile Include="Render.py" />
-    <Compile Include="TestAll.py" />
-    <Compile Include="Timing.py" />
-    <Compile Include="Utility.py" />
-    <Compile Include="Vectors.py" />
-    <Compile Include="World.py" />
-    <Compile Include="WorldTest.py" />
+    <Compile Include="Game\Actor.py" />
+    <Compile Include="Game\Blocks.py" />
+    <Compile Include="Game\Compile.py" />
+    <Compile Include="Game\Game.py" />
+    <Compile Include="Game\RenderTest.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Game\RenderInterface.py" />
+    <Compile Include="Game\RenderInterfaceTest.py" />
+    <Compile Include="Game\Inventory.py" />
+    <Compile Include="Game\Items.py" />
+    <Compile Include="Game\Launch.py" />
+    <Compile Include="Game\Log.py" />
+    <Compile Include="Game\DeprRender.py" />
+    <Compile Include="Game\TestAll.py" />
+    <Compile Include="Game\Timing.py" />
+    <Compile Include="Game\Utility.py" />
+    <Compile Include="Game\Vectors.py" />
+    <Compile Include="Game\World.py" />
+    <Compile Include="Game\WorldTest.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="D:\Ordner\Projekte\BattleDotZombie\Game\" />
+    <Folder Include="Game\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Render\Render.vcxproj">
+      <Name>Render</Name>
+      <Project>{ce0d7b2d-6679-4dfa-b819-e143c7d8f895}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

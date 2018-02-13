@@ -7,3 +7,9 @@
 /yed.jar - Verknüpfung.lnk
 /Timing.py
 /RenderTutorial
+/log
+/Game/__pycache__
+/Game/log
+/Render/Debug
+*.opendb
+*.opensdf
