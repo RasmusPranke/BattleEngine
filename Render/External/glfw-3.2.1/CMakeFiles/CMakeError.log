@@ -1,0 +1,38 @@
+Determining if the include file pthread.h exists failed with the following output:
+Change Dir: D:/Ordner/Projekte/BattleDotZombie/Render/External/glfw-3.2.1/CMakeFiles/CMakeTmp
+
+Run Build Command:"C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/MSBuild/15.0/Bin/MSBuild.exe" "cmTC_28d91.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=15.0"
+Microsoft (R)-Buildmodul, Version 15.5.180.51428 fr .NET Framework
+Copyright (C) Microsoft Corporation. Alle Rechte vorbehalten.
+
+Der Buildvorgang wurde am 13.02.2018 14:27:12 gestartet.
+Projekt "D:\Ordner\Projekte\BattleDotZombie\Render\External\glfw-3.2.1\CMakeFiles\CMakeTmp\cmTC_28d91.vcxproj" auf Knoten "1" (Standardziele).
+PrepareForBuild:
+  Das Verzeichnis "cmTC_28d91.dir\Debug\" wird erstellt.
+  Das Verzeichnis "D:\Ordner\Projekte\BattleDotZombie\Render\External\glfw-3.2.1\CMakeFiles\CMakeTmp\Debug\" wird erstellt.
+  Das Verzeichnis "cmTC_28d91.dir\Debug\cmTC_28d91.tlog\" wird erstellt.
+InitializeBuildStatus:
+  "cmTC_28d91.dir\Debug\cmTC_28d91.tlog\unsuccessfulbuild" wird erstellt, da "AlwaysCreate" angegeben wurde.
+ClCompile:
+  C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.12.25827\bin\HostX86\x64\CL.exe /c /Zi /W3 /WX- /diagnostics:classic /Od /Ob0 /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_28d91.dir\Debug\\" /Fd"cmTC_28d91.dir\Debug\vc141.pdb" /Gd /TC /errorReport:queue "D:\Ordner\Projekte\BattleDotZombie\Render\External\glfw-3.2.1\CMakeFiles\CMakeTmp\CheckIncludeFile.c"
+  Microsoft (R) C/C++-Optimierungscompiler Version 19.12.25835 fr x64
+  Copyright (C) Microsoft Corporation. Alle Rechte vorbehalten.
+  
+  cl /c /Zi /W3 /WX- /diagnostics:classic /Od /Ob0 /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_28d91.dir\Debug\\" /Fd"cmTC_28d91.dir\Debug\vc141.pdb" /Gd /TC /errorReport:queue "D:\Ordner\Projekte\BattleDotZombie\Render\External\glfw-3.2.1\CMakeFiles\CMakeTmp\CheckIncludeFile.c"
+  CheckIncludeFile.c
+  
+D:\Ordner\Projekte\BattleDotZombie\Render\External\glfw-3.2.1\CMakeFiles\CMakeTmp\CheckIncludeFile.c(1): fatal error C1083: Datei (Include) kann nicht ge”ffnet werden: "pthread.h": No such file or directory [D:\Ordner\Projekte\BattleDotZombie\Render\External\glfw-3.2.1\CMakeFiles\CMakeTmp\cmTC_28d91.vcxproj]
+Die Erstellung des Projekts "D:\Ordner\Projekte\BattleDotZombie\Render\External\glfw-3.2.1\CMakeFiles\CMakeTmp\cmTC_28d91.vcxproj" ist abgeschlossen (Standardziele) -- FEHLER.
+
+Fehler beim Buildvorgang.
+
+"D:\Ordner\Projekte\BattleDotZombie\Render\External\glfw-3.2.1\CMakeFiles\CMakeTmp\cmTC_28d91.vcxproj" (Standardziel) (1) ->
+(ClCompile Ziel) -> 
+  D:\Ordner\Projekte\BattleDotZombie\Render\External\glfw-3.2.1\CMakeFiles\CMakeTmp\CheckIncludeFile.c(1): fatal error C1083: Datei (Include) kann nicht ge”ffnet werden: "pthread.h": No such file or directory [D:\Ordner\Projekte\BattleDotZombie\Render\External\glfw-3.2.1\CMakeFiles\CMakeTmp\cmTC_28d91.vcxproj]
+
+    0 Warnung(en)
+    1 Fehler
+
+Verstrichene Zeit 00:00:00.57
+
+
