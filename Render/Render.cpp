@@ -10,7 +10,7 @@ class EngineInterfaceImpl : public EngineInterface {
 public:
     int loadMessage();
     int getId();
-    ShowArguments getShow();
+    ShowArguments getVisible();
     EngineInterfaceImpl(PyObject * givenPyInterface);
     ~EngineInterfaceImpl();
 private:
@@ -30,7 +30,7 @@ int EngineInterfaceImpl::getId()
     PyObject * msg = getMessage();
     return PyLong_AsLong(msg);
 }
-ShowArguments EngineInterfaceImpl::getShow()
+ShowArguments EngineInterfaceImpl::getVisible()
 {
     ShowArguments args;
     PyObject * msg = getMessage();

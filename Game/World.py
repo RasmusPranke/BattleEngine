@@ -46,4 +46,5 @@ class World:
 
         print("Creating objects!")
         for _ in self.grid.flat:
-          RI.createObject()
+          id = RI.createObject()
+          RI.setVisible(id, True)

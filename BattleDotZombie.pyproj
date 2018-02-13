@@ -5,7 +5,7 @@
     <ProjectGuid>eea9f39a-ae3a-476b-8da9-8bc6d0b43631</ProjectGuid>
     <ProjectHome>.</ProjectHome>
     <StartupFile>BattleDotZombie.py</StartupFile>
-    <SearchPath>Debug;Game</SearchPath>
+    <SearchPath>Game;x64\Debug</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>BattleDotZombie</Name>
@@ -48,13 +48,6 @@
   <ItemGroup>
     <Folder Include="D:\Ordner\Projekte\BattleDotZombie\Game\" />
     <Folder Include="Game\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="Render\Render.vcxproj">
-      <Name>Render</Name>
-      <Project>{ce0d7b2d-6679-4dfa-b819-e143c7d8f895}</Project>
-      <Private>True</Private>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|PythonCore|3.6" />

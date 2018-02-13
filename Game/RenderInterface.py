@@ -13,7 +13,7 @@
 # RESERVED |  -1  |                  | Reserved for Engine internals. Don't use this as a message ID.
 # Stop     |  0   | None             | Tells the rendering engine to terminate.
 # Create   |  1   | OId              |
-# Show     |  2   | (OId, True/False)|
+# Visible  |  2   | (OId, True/False)|
 #Initialize|  99  | None             | Called only once to tell the rendering that the game is now ready.
 #These methods are called here and then translated to messages passed through the pipe to the rendering.
 #initConnection MUST be called before any message can be passed.
@@ -87,7 +87,7 @@ def destroyObject(OId):
   objectMap[OId] = False
   show(OId, False)
 
-def show(OId, show):
+def setVisible(OId, show):
   '''Shows/Hides the Object referenced by the givne Id.'''
   gameSend.send((2, (OId, show)))
 
