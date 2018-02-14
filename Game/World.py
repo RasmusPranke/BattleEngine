@@ -44,7 +44,11 @@ class World:
         self.size = size
         self.height = height
 
-        print("Creating objects!")
+        print("Registering world blocks!")
         for _ in self.grid.flat:
           id = RI.createObject()
+          print("I got the id:", id)
           RI.setVisible(id, True)
+          if numpy.random.random() < 0.5:
+            print("Destroying object!")
+            RI.destroyObject(id)

@@ -9,10 +9,34 @@
 
 const int PRE_ALLOCATE = 1000;
 
+struct IdStack 
+{
+    int offset = 0;
+    int size = 0;
+    int * id_list;
+};
+
+int fetch_id(IdStack * stack) {
+    if (stack->offset >= stack->size) {
+        throw "Can't fetch id, idStack is empty!\n";
+    }
+    int ret = stack->id_list[stack->offset];
+    ++stack->offset;
+    return ret;
+}
+
+void return_id(IdStack * stack, int id) {
+    if (stack->offset <= 0) {
+        throw "Can't return id, idStack is full!\n";
+    }
+    --stack->offset;
+    stack->id_list[stack->offset] = id;
+}
+
 struct RenderObject
 {
     bool show = false;
-    int model;
+    int model = -1;
     glm::mat4 scale;
     glm::mat4 rotation;
     glm::mat4 translation;
@@ -72,7 +96,7 @@ GLFWwindow * init() {
     return window;
 }
 
-Model createModel(int vertex_count, GLfloat * vertex_data) {
+Model create_model(int vertex_count, GLfloat * vertex_data) {
     Model model = Model();
     glGenBuffers(1, &model.vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, model.vertex_buffer);
@@ -80,7 +104,7 @@ Model createModel(int vertex_count, GLfloat * vertex_data) {
     return model;
 }
 
-void showModel(Model model) {
+void show_model(Model model) {
     // 1rst attribute buffer : vertices
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, model.vertex_buffer);
@@ -111,20 +135,46 @@ int render(EngineInterface * interface)
     glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
     RenderObject objects[PRE_ALLOCATE];
+    IdStack object_id_stack;
+    int oids[PRE_ALLOCATE];
+    for (int i = 0; i < PRE_ALLOCATE; i++) {
+        oids[i] = i;
+    }
+    object_id_stack.size = sizeof(oids);
+    object_id_stack.id_list = &(*oids);
+
     Model models[PRE_ALLOCATE];
+    IdStack model_id_stack;
+    int mids[PRE_ALLOCATE];
+    for (int i = 0; i < PRE_ALLOCATE; i++) {
+        mids[i] = i;
+    }
+    model_id_stack.size = sizeof(mids);
+    model_id_stack.id_list = &(*mids);
 
     GLfloat triangle_vertices_1[] = {
         -1.0f, -1.0f, 0.0f,
         -1.0f, 1.0f, 0.0f,
         0.0f,  0.5f, 0.0f,
     };
-    models[0] = createModel(sizeof(triangle_vertices_1), triangle_vertices_1);
+    models[0] = create_model(sizeof(triangle_vertices_1), triangle_vertices_1);
     GLfloat triangle_vertices_2[] = {
         1.0f, -1.0f, 0.0f,
         1.0f, 1.0f, 0.0f,
         0.0f,  0.0f, 0.0f,
     };
-    models[1] = createModel(sizeof(triangle_vertices_2), triangle_vertices_2);
+    models[1] = create_model(sizeof(triangle_vertices_2), triangle_vertices_2);
+    GLfloat triangle_vertices_3[] = {
+        -0.25f, -1.0f, 0.0f,
+        0.25f, -1.0f, 0.0f,
+        0.0f,  1.0f, 0.0f,
+    };
+    models[2] = create_model(sizeof(triangle_vertices_3), triangle_vertices_3);
+
+
+    objects[0].model = 0;
+    objects[30].model = 1;
+    objects[75].model = 2;
 
     //Load shader
     GLuint programID = LoadShaders("SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader");
@@ -138,8 +188,10 @@ int render(EngineInterface * interface)
         // Use our shader
         glUseProgram(programID);
 
-        for (int i = 0; i < 2; i++) {
-            showModel(models[i]);
+        for (int i = 0; i < PRE_ALLOCATE; i++) {
+            if (objects[i].show) {
+                show_model(models[objects[i].model]);
+            }
         }
 
         // Swap buffers
@@ -151,20 +203,32 @@ int render(EngineInterface * interface)
         switch (msgId) {
         case 1:
         {
-            int oid = interface->getId();
-            if (oid > PRE_ALLOCATE) {
-                throw "OId too large!";
-            }
-            std::cout << "Found an OID: " << oid << "\n";
+            int oid = fetch_id(&object_id_stack);
+            std::cout << "Assigning an OID: " << oid << "\n";
+            interface->sendInt(oid);
             break;
         }
         case 2:
-            ShowArguments args = interface->getVisible();
-            objects[args.oid].show = args.show;
-            std::cout << "Should I show: " << args.oid << "? " << args.show << "\n";
+        {
+            int oid = interface->getId();
+            std::cout << "Freeing oid: " << oid << "\n";
+            objects[oid].show = false;
+            return_id(&object_id_stack, oid);
             break;
-        default:
-            break;
+        }
+            case 3:
+                ShowArguments args = interface->getVisible();
+                std::cout << "Should I show: " << args.oid << "? " << args.show << "\n";
+                //Check if object is showable.
+                if (args.show && objects[args.oid].model == -1) {
+                    std::cout << "To show an Object, it must have a model!\n";
+                }
+                else {
+                    objects[args.oid].show = args.show;
+                }
+                break;
+            default:
+                break;
         }
     } while (msgId);
     for (int i = 0; i < PRE_ALLOCATE; i++) {

@@ -9,6 +9,7 @@
 class EngineInterfaceImpl : public EngineInterface {
 public:
     int loadMessage();
+    void sendInt(int id);
     int getId();
     ShowArguments getVisible();
     EngineInterfaceImpl(PyObject * givenPyInterface);
@@ -21,12 +22,16 @@ private:
 int EngineInterfaceImpl::loadMessage()
 {
     PyObject * messageId = PyObject_CallMethod(messageInterface, "loadMessage", "");
-    PyErr_Print();
+    //PyErr_Print();
     return PyLong_AsLong(messageId);
 }
 
-int EngineInterfaceImpl::getId()
+void EngineInterfaceImpl::sendInt(int id)
 {
+    PyObject_CallMethod(messageInterface, "sendMessage", "O", PyLong_FromLong(id));
+    //PyErr_Print();
+}
+int EngineInterfaceImpl::getId() {
     PyObject * msg = getMessage();
     return PyLong_AsLong(msg);
 }

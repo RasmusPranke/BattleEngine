@@ -12,8 +12,12 @@
 #Operation | OpId | Argument         | Comment
 # RESERVED |  -1  |                  | Reserved for Engine internals. Don't use this as a message ID.
 # Stop     |  0   | None             | Tells the rendering engine to terminate.
-# Create   |  1   | OId              |
-# Visible  |  2   | (OId, True/False)|
+# Create   |  1   | None             | Returns an unused ObjectId and marks it as used.
+# Destroy  |  2   | OId              | Frees the given OId to be reassigned later.
+# Visible  |  3   | (OId, True/False)|
+# Set Model|  4   | (OId, MId)       | Assigns the given Model to the given Object. Multiple Objects may share a Model.
+# Model Operations
+# Create   |  2   |[Model Points...] | Sends back the ID of the given Model.
 #Initialize|  99  | None             | Called only once to tell the rendering that the game is now ready.
 #These methods are called here and then translated to messages passed through the pipe to the rendering.
 #initConnection MUST be called before any message can be passed.
@@ -30,10 +34,8 @@ objectMap = np.array([])
 
 class RenderInterfaceImpl:
   def __init__(self, renderRcvPipe):
-    print("Creating impl! ", self)
     self.recvPipe = renderRcvPipe
     self.message = ()
-    print(self.recvPipe)
 
   def loadMessage(self):
     if self.recvPipe.poll(1):
@@ -48,49 +50,44 @@ class RenderInterfaceImpl:
   def getMessage(self):
     return self.message
 
-'''Set up the rendering process.'''
-renderToGame = Pipe(False)
-gameToRender = Pipe(False)
+  def sendMessage(self, msg):
+    self.recvPipe.send(msg)
 
-gameRecieve = renderToGame[0]
-gameSend = gameToRender[1]
-renderRecieve = gameToRender[0]
-renderSend = renderToGame[1]
+'''Set up the rendering process.'''
+inputPipe = Pipe(False)
+renderPipe = Pipe(True)
+
+userInput_gameSide = inputPipe[0]
+render_gameSide = renderPipe[1]
+render_renderSide = renderPipe[0]
+userInput_renderSide = renderPipe[1]
 
 renderThread = Process(target=Render.start,
-                        args=((RenderInterfaceImpl(renderRecieve),)))#, '''renderSend'''),))
+                        args=((RenderInterfaceImpl(render_renderSide),)))#, '''renderSend'''),))
 
 def initilaizeRender():
   '''Spawn the new Process.'''
   renderThread.start()
-  gameSend.send((99, None))
-  return gameRecieve
+  render_gameSide.send((99, None))
+  return userInput_gameSide
 
 def createObject():
   '''Allocates and returns the lowest available ObjectId that can subsequently be used to identify an Object to the renderer.'''
   #This prevents that the number ever overflows, at the cost of a bit of performance with increasing objectcounts.
   #If this is ever a performance problem, collect free values in its own map. (Append destroyed values and the size of the array whenever a new Id is allocated.)
-  global objectMap
   #If all values are used/True, append a new one and return its Id.
-  if objectMap.all():
-    objectMap = np.append(objectMap, [True])
-    OId = len(objectMap) - 1 #New Id is the last element.
-    gameSend.send((1, OId))
-    return OId
-  else:
-    OId = np.argwhere(np.logical_not(objectMap))[0][0]
-    objectMap[OId] = True
-  return OId
+  render_gameSide.send((1, None))
+  print(render_gameSide.poll(20))
+  return render_gameSide.recv()
 
 def destroyObject(OId):
   '''Marks the given ObjectId as useable and hides whatever it was showing.'''
-  objectMap[OId] = False
-  show(OId, False)
+  render_gameSide.send((2, OId))
 
 def setVisible(OId, show):
-  '''Shows/Hides the Object referenced by the givne Id.'''
-  gameSend.send((2, (OId, show)))
+  '''Shows/Hides the Object referenced by the given Id.'''
+  render_gameSide.send((3, (OId, show)))
 
 def stop():
-  gameSend.send((0, None))
+  render_gameSide.send((0, None))
   renderThread.join()
