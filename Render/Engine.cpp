@@ -5,17 +5,22 @@
 #include <glm\glm.hpp>
 
 #include "Engine.h"
+#include "shader_loader.h"
 
-const int pre_allocate = 1000;
+const int PRE_ALLOCATE = 1000;
 
 struct RenderObject
 {
     bool show = false;
-    long vertexCount;
-    long * model;
+    int model;
     glm::mat4 scale;
     glm::mat4 rotation;
     glm::mat4 translation;
+};
+
+struct Model
+{
+    GLuint vertex_buffer;
 };
 
 GLFWwindow * init() {
@@ -47,8 +52,8 @@ GLFWwindow * init() {
     }
     glfwMakeContextCurrent(window);
     std::cout << "Successfully initialized Window!\n";
-    
-    
+
+
     std::cout << "Initializing GLEW!\n";
     if (glewInit() != GLEW_OK) {
         fprintf(stderr, "Failed to initialize GLEW\n");
@@ -57,8 +62,41 @@ GLFWwindow * init() {
         return NULL;
     }
     std::cout << "Successfully initialized GLEW!\n";
-    
+
+    std::cout << "Creating VAO!\n";
+    GLuint vertexArrayId;
+    glGenVertexArrays(1, &vertexArrayId);
+    glBindVertexArray(vertexArrayId);
+    std::cout << "Successfully created VAO!\n";
+
     return window;
+}
+
+Model createModel(int vertex_count, GLfloat * vertex_data) {
+    Model model = Model();
+    glGenBuffers(1, &model.vertex_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, model.vertex_buffer);
+    glBufferData(GL_ARRAY_BUFFER, vertex_count, vertex_data, GL_STATIC_DRAW);
+    return model;
+}
+
+void showModel(Model model) {
+    // 1rst attribute buffer : vertices
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, model.vertex_buffer);
+    glVertexAttribPointer(
+        0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+        3,                  // size
+        GL_FLOAT,           // type
+        GL_FALSE,           // normalized?
+        0,                  // stride
+        (void*)0            // array buffer offset
+    );
+
+    // Draw the triangle !
+    glDrawArrays(GL_TRIANGLES, 0, 3); // 3 indices starting at 0 -> 1 triangle
+
+    glDisableVertexAttribArray(0);
 }
 
 int render(EngineInterface * interface)
@@ -72,12 +110,37 @@ int render(EngineInterface * interface)
     // Dark blue background
     glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
-    RenderObject objects[pre_allocate];
+    RenderObject objects[PRE_ALLOCATE];
+    Model models[PRE_ALLOCATE];
+
+    GLfloat triangle_vertices_1[] = {
+        -1.0f, -1.0f, 0.0f,
+        -1.0f, 1.0f, 0.0f,
+        0.0f,  0.5f, 0.0f,
+    };
+    models[0] = createModel(sizeof(triangle_vertices_1), triangle_vertices_1);
+    GLfloat triangle_vertices_2[] = {
+        1.0f, -1.0f, 0.0f,
+        1.0f, 1.0f, 0.0f,
+        0.0f,  0.0f, 0.0f,
+    };
+    models[1] = createModel(sizeof(triangle_vertices_2), triangle_vertices_2);
+
+    //Load shader
+    GLuint programID = LoadShaders("SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader");
+
     int msgId;
     do {
+
+        // Clear the screen
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Draw nothing, see you in tutorial 2 !
+        // Use our shader
+        glUseProgram(programID);
+
+        for (int i = 0; i < 2; i++) {
+            showModel(models[i]);
+        }
 
         // Swap buffers
         glfwSwapBuffers(window);
@@ -89,7 +152,7 @@ int render(EngineInterface * interface)
         case 1:
         {
             int oid = interface->getId();
-            if (oid > pre_allocate) {
+            if (oid > PRE_ALLOCATE) {
                 throw "OId too large!";
             }
             std::cout << "Found an OID: " << oid << "\n";
@@ -104,7 +167,7 @@ int render(EngineInterface * interface)
             break;
         }
     } while (msgId);
-    for (int i = 0; i < pre_allocate; i++) {
+    for (int i = 0; i < PRE_ALLOCATE; i++) {
         std::cout << objects[i].show;
     }
     std::cout << "Terminating Engine!";

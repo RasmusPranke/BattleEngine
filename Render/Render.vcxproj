@@ -193,10 +193,12 @@
   <ItemGroup>
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="Render.cpp" />
+    <ClCompile Include="shader_loader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="shader_loader.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="setup.py" />
