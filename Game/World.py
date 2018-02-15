@@ -45,10 +45,4 @@ class World:
         self.height = height
 
         print("Registering world blocks!")
-        for _ in self.grid.flat:
-          id = RI.createObject()
-          print("I got the id:", id)
-          RI.setVisible(id, True)
-          if numpy.random.random() < 0.5:
-            print("Destroying object!")
-            RI.destroyObject(id)
+        pass #TODO: Actually register and show blocks.

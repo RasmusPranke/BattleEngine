@@ -103,7 +103,19 @@ class Game:
         self.update = mode.updateMethod
 
     def run(self):
-      pass
+      r = random.random
+      def rxy():
+          return (r() * 2) - 1
+    
+      model = [rxy(), rxy(), 0, rxy(), rxy(), 0, rxy(), rxy(), 0]
+      print("Model:", model)
+      modelId = RI.createModel(model)
+      print("Model id:", modelId)
+      id = RI.createObject()
+      print("Object id:", id)
+      RI.setModel(id, modelId)
+      RI.setVisible(id, True)
+      input("Press Enter to continue...")
       #GTRI.stop()
 
     def __init__(self, inPipe):

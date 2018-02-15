@@ -196,15 +196,17 @@
     <ClCompile Include="shader_loader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Engine.h" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="shader_loader.h" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="setup.py" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Render.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Engine.h" />
+    <ClInclude Include="engine_interface.h" />
+    <ClInclude Include="game_instance.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="shader_loader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

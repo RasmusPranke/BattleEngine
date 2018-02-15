@@ -5,10 +5,16 @@
 #include <glm\glm.hpp>
 
 #include "Engine.h"
+#include "engine_interface.h"
 #include "shader_loader.h"
 
 const int PRE_ALLOCATE = 1000;
 
+/*
+Keeps track which Ids are available (NOT which are used).
+Initialize this with an array containing all allowed Ids, setting the size to the size of that list and not touching the offset.
+fetch_id will then always return an unused Id, while return_id will mark that id as usable.
+*/
 struct IdStack 
 {
     int offset = 0;
@@ -46,6 +52,22 @@ struct Model
 {
     GLuint vertex_buffer;
 };
+
+Model create_model(int vertex_count, GLfloat * vertex_data) {
+    std::cout << "Creating Model!\n";
+    std::cout << "Size: " << vertex_count << "\n";
+    std::cout << "Data: ";
+    for (int i = 0; i < vertex_count; i++) {
+        std::cout << vertex_data[i] << " ";
+    }
+    std::cout << "\n";
+
+    Model model = Model();
+    glGenBuffers(1, &model.vertex_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, model.vertex_buffer);
+    glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(vertex_data), vertex_data, GL_STATIC_DRAW);
+    return model;
+}
 
 GLFWwindow * init() {
     std::cout << "Initializing Engine! \n";
@@ -96,16 +118,11 @@ GLFWwindow * init() {
     return window;
 }
 
-Model create_model(int vertex_count, GLfloat * vertex_data) {
-    Model model = Model();
-    glGenBuffers(1, &model.vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, model.vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, vertex_count, vertex_data, GL_STATIC_DRAW);
-    return model;
-}
-
-void show_model(Model model) {
+void show_model(Model model, GLuint shader) {
     // 1rst attribute buffer : vertices
+
+        // Use our shader
+    glUseProgram(shader);
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, model.vertex_buffer);
     glVertexAttribPointer(
@@ -134,6 +151,7 @@ int render(EngineInterface * interface)
     // Dark blue background
     glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
+    //Initialize the Object list and its Id stack.
     RenderObject objects[PRE_ALLOCATE];
     IdStack object_id_stack;
     int oids[PRE_ALLOCATE];
@@ -143,6 +161,7 @@ int render(EngineInterface * interface)
     object_id_stack.size = sizeof(oids);
     object_id_stack.id_list = &(*oids);
 
+    //Initialize the Model list and its Id stack.
     Model models[PRE_ALLOCATE];
     IdStack model_id_stack;
     int mids[PRE_ALLOCATE];
@@ -152,45 +171,20 @@ int render(EngineInterface * interface)
     model_id_stack.size = sizeof(mids);
     model_id_stack.id_list = &(*mids);
 
-    GLfloat triangle_vertices_1[] = {
-        -1.0f, -1.0f, 0.0f,
-        -1.0f, 1.0f, 0.0f,
-        0.0f,  0.5f, 0.0f,
-    };
-    models[0] = create_model(sizeof(triangle_vertices_1), triangle_vertices_1);
-    GLfloat triangle_vertices_2[] = {
-        1.0f, -1.0f, 0.0f,
-        1.0f, 1.0f, 0.0f,
-        0.0f,  0.0f, 0.0f,
-    };
-    models[1] = create_model(sizeof(triangle_vertices_2), triangle_vertices_2);
-    GLfloat triangle_vertices_3[] = {
-        -0.25f, -1.0f, 0.0f,
-        0.25f, -1.0f, 0.0f,
-        0.0f,  1.0f, 0.0f,
-    };
-    models[2] = create_model(sizeof(triangle_vertices_3), triangle_vertices_3);
-
-
-    objects[0].model = 0;
-    objects[30].model = 1;
-    objects[75].model = 2;
-
     //Load shader
     GLuint programID = LoadShaders("SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader");
 
-    int msgId;
+
+    int msg_id;
     do {
 
         // Clear the screen
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Use our shader
-        glUseProgram(programID);
-
         for (int i = 0; i < PRE_ALLOCATE; i++) {
             if (objects[i].show) {
-                show_model(models[objects[i].model]);
+                std::cout << "Rendering: " << i << "\n";
+                show_model(models[objects[i].model], programID);
             }
         }
 
@@ -198,9 +192,9 @@ int render(EngineInterface * interface)
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-        msgId = interface->loadMessage();
-        std::cout << "Message is: " << msgId << "\n";
-        switch (msgId) {
+        msg_id = interface->loadMessage();
+        std::cout << "Message is: " << msg_id << "\n";
+        switch (msg_id) {
         case 1:
         {
             int oid = fetch_id(&object_id_stack);
@@ -216,21 +210,42 @@ int render(EngineInterface * interface)
             return_id(&object_id_stack, oid);
             break;
         }
-            case 3:
-                ShowArguments args = interface->getVisible();
-                std::cout << "Should I show: " << args.oid << "? " << args.show << "\n";
-                //Check if object is showable.
-                if (args.show && objects[args.oid].model == -1) {
-                    std::cout << "To show an Object, it must have a model!\n";
-                }
-                else {
-                    objects[args.oid].show = args.show;
-                }
-                break;
-            default:
-                break;
+        case 3:
+        {
+            ShowArguments args = interface->getVisible();
+            std::cout << "Should I show: " << args.oid << "? " << args.show << "\n";
+            //Check if object is showable.
+            if (args.show && objects[args.oid].model == -1) {
+                std::cout << "To show an Object, it must have a model!\n";
+            }
+            else {
+                objects[args.oid].show = args.show;
+            }
+            break;
         }
-    } while (msgId);
+        case 4:
+        {
+            IdTuple args = interface->getIdTuple();
+            std::cout << "Assigning Model " << args.mid << " to object " << args.oid << "\n";
+            objects[args.oid].model = args.mid;
+            break;
+        }
+        case 11:
+        {
+            std::cout << "Loading Model!\n";
+            int model_id = fetch_id(&model_id_stack);
+            VertexArray model_vertices = interface->getModel();
+            models[model_id] = create_model(model_vertices.length, model_vertices.vertex_list);
+            interface->sendInt(model_id);
+            break; 
+        }
+        case -2:
+            break;
+        default:
+            std::cout << "Unknown message!\n";
+            break;
+        }
+    } while (msg_id);
     for (int i = 0; i < PRE_ALLOCATE; i++) {
         std::cout << objects[i].show;
     }

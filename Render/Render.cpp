@@ -1,6 +1,7 @@
 #include <Python.h>
 #include <iostream>
 #include "Engine.h"
+#include "engine_interface.h"
 
 /////////////////////////////////////////
 //Implementation of the Engine Interface.
@@ -12,6 +13,8 @@ public:
     void sendInt(int id);
     int getId();
     ShowArguments getVisible();
+    VertexArray getModel();
+    IdTuple getIdTuple();
     EngineInterfaceImpl(PyObject * givenPyInterface);
     ~EngineInterfaceImpl();
 private:
@@ -28,8 +31,8 @@ int EngineInterfaceImpl::loadMessage()
 
 void EngineInterfaceImpl::sendInt(int id)
 {
-    PyObject_CallMethod(messageInterface, "sendMessage", "O", PyLong_FromLong(id));
-    //PyErr_Print();
+    PyObject * idO = PyLong_FromLong(id);
+    PyObject_CallMethod(messageInterface, "sendMessage", "O", idO);
 }
 int EngineInterfaceImpl::getId() {
     PyObject * msg = getMessage();
@@ -41,6 +44,34 @@ ShowArguments EngineInterfaceImpl::getVisible()
     PyObject * msg = getMessage();
     PyArg_ParseTuple(msg, "ip", &args.oid, &args.show);
     return args;
+}
+VertexArray EngineInterfaceImpl::getModel() {
+    VertexArray ret;
+    
+    PyObject * msg = getMessage();
+    Py_ssize_t size = PyList_Size(msg);
+    int int_size = PyLong_AsLong(PyLong_FromSsize_t(size));
+
+    float * vertices = (float*)malloc(sizeof(vertices) * int_size);
+
+    for (int i = 0; i < int_size; i++) {
+        ssize_t itemPos = i;
+        PyObject * item = PyList_GetItem(msg, itemPos);
+        vertices[i] = PyFloat_AsDouble(item);
+        std::cout << vertices[i] << " ";
+    }
+    std::cout << "\n";
+
+    ret.length = int_size;
+    ret.vertex_list = vertices;
+    return ret;
+}
+IdTuple EngineInterfaceImpl::getIdTuple()
+{
+    IdTuple tuple;
+    PyObject * msg = getMessage();
+    PyArg_ParseTuple(msg, "ii", &tuple.oid, &tuple.mid);
+    return tuple;
 }
 EngineInterfaceImpl::EngineInterfaceImpl(PyObject * pyInterface)
 {
