@@ -3,6 +3,7 @@
 #include <glew.h>
 #include <glfw3.h>
 #include <glm\glm.hpp>
+#include <glm\gtc\matrix_transform.hpp>
 
 #include "Engine.h"
 #include "engine_interface.h"
@@ -39,17 +40,33 @@ void return_id(IdStack * stack, int id) {
     stack->id_list[stack->offset] = id;
 }
 
+struct Shader {
+    GLuint program_id;
+    GLuint mvp_handle;
+};
+
+Shader load_shader(const char* vertex_shader_file, const char* fragment_shader_file) {
+    Shader shader;
+    shader.program_id = LoadShaders(vertex_shader_file, fragment_shader_file);
+    shader.mvp_handle = glGetUniformLocation(shader.program_id, "MVP");
+    return shader;
+}
+
 struct RenderObject
 {
     bool show = false;
     int model = -1;
-    glm::mat4 scale;
-    glm::mat4 rotation;
-    glm::mat4 translation;
+    glm::mat4 model_matrix = glm::mat4(1.0f);
+};
+
+struct Camera {
+    glm::mat4 view_matrix;
+    glm::mat4 projection_matrix;
 };
 
 struct Model
 {
+    int vertex_count;
     GLuint vertex_buffer;
 };
 
@@ -66,6 +83,7 @@ Model create_model(int vertex_count, GLfloat * vertex_data) {
     glGenBuffers(1, &model.vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, model.vertex_buffer);
     glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(vertex_data), vertex_data, GL_STATIC_DRAW);
+    model.vertex_count = vertex_count;
     return model;
 }
 
@@ -118,11 +136,15 @@ GLFWwindow * init() {
     return window;
 }
 
-void show_model(Model model, GLuint shader) {
+void show_model(Model model, glm::mat4 model_matrix, Shader shader, Camera camera) {
+    //Calculate the MVP matrix
+    glm::mat4 mvp = camera.projection_matrix * camera.view_matrix * model_matrix;
+
     // 1rst attribute buffer : vertices
 
         // Use our shader
-    glUseProgram(shader);
+    glUseProgram(shader.program_id);
+    glUniformMatrix4fv(shader.mvp_handle, 1, GL_FALSE, &mvp[0][0]);
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, model.vertex_buffer);
     glVertexAttribPointer(
@@ -135,7 +157,7 @@ void show_model(Model model, GLuint shader) {
     );
 
     // Draw the triangle !
-    glDrawArrays(GL_TRIANGLES, 0, 3); // 3 indices starting at 0 -> 1 triangle
+    glDrawArrays(GL_TRIANGLES, 0, model.vertex_count); // 3 indices starting at 0 -> 1 triangle
 
     glDisableVertexAttribArray(0);
 }
@@ -172,8 +194,17 @@ int render(EngineInterface * interface)
     model_id_stack.id_list = &(*mids);
 
     //Load shader
-    GLuint programID = LoadShaders("SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader");
+    Shader shader = load_shader("SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader");
 
+    //Initialize default camera.
+    //TODO: UI camera
+    Camera cam;
+    cam.projection_matrix = glm::perspective(glm::radians(45.0f), (float) 4.0f / (float)3.0f, 0.1f, 100.0f);
+    cam.view_matrix = glm::lookAt(
+        glm::vec3(4, 3, 3), // Camera is at (4,3,3), in World Space
+        glm::vec3(0, 0, 0), // and looks at the origin
+        glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
+    );
 
     int msg_id;
     do {
@@ -184,7 +215,7 @@ int render(EngineInterface * interface)
         for (int i = 0; i < PRE_ALLOCATE; i++) {
             if (objects[i].show) {
                 std::cout << "Rendering: " << i << "\n";
-                show_model(models[objects[i].model], programID);
+                show_model(models[objects[i].model], objects->model_matrix, shader, cam);
             }
         }
 

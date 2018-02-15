@@ -8,7 +8,9 @@ import math
 import numpy
 
 #World is a grid of tupels. The first value is the block, the second the damage done to the block.
-    
+
+blockModel = []
+
 class World:
     def xyAdjust(func):
         def wrap(self, x, y, z, *args):
