@@ -114,7 +114,9 @@ class Game:
       id = RI.createObject()
       RI.setModel(id, modelId)
       RI.setVisible(id, True)
-      input("Press Enter to continue...")
+      for i in range(4):
+        input("Press Enter to continue...")
+        RI.move(id, (rxy(), rxy(), rxy()))
       
       ''' #Creates random triangles
       for i in range(10):
@@ -124,7 +126,6 @@ class Game:
         RI.setVisible(id, True)
         input("Press Enter to continue...")
      '''
-      #GTRI.stop()
 
     def __init__(self, inPipe):
         self.actionList = {}

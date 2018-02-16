@@ -1,5 +1,8 @@
 #include <Python.h>
 #include <iostream>
+#include <glm\glm.hpp>
+
+#include "Utility.h"
 #include "Engine.h"
 #include "engine_interface.h"
 
@@ -14,7 +17,8 @@ public:
     int getId();
     ShowArguments getVisible();
     VertexArray getModel();
-    IdTuple getIdTuple();
+    IdIdTuple getIdTuple();
+    IdVectorTuple getMovement();
     EngineInterfaceImpl(PyObject * givenPyInterface);
     ~EngineInterfaceImpl();
 private:
@@ -66,11 +70,22 @@ VertexArray EngineInterfaceImpl::getModel() {
     ret.vertex_list = vertices;
     return ret;
 }
-IdTuple EngineInterfaceImpl::getIdTuple()
+IdIdTuple EngineInterfaceImpl::getIdTuple()
 {
-    IdTuple tuple;
+    IdIdTuple tuple;
     PyObject * msg = getMessage();
     PyArg_ParseTuple(msg, "ii", &tuple.oid, &tuple.mid);
+    return tuple;
+}
+IdVectorTuple EngineInterfaceImpl::getMovement()
+{
+    IdVectorTuple tuple;
+    PyObject * coordinateTuple;
+    float x, y, z = -5;
+    PyObject * msg = getMessage();
+    PyArg_ParseTuple(msg, "iO", &tuple.oid, &coordinateTuple);
+    PyArg_ParseTuple(coordinateTuple, "fff", &x, &y, &z);
+    tuple.change = glm::vec3(x, y, z);
     return tuple;
 }
 EngineInterfaceImpl::EngineInterfaceImpl(PyObject * pyInterface)

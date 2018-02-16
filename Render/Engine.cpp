@@ -5,6 +5,7 @@
 #include <glm\glm.hpp>
 #include <glm\gtc\matrix_transform.hpp>
 
+#include "Utility.h"
 #include "Engine.h"
 #include "engine_interface.h"
 #include "shader_loader.h"
@@ -71,9 +72,9 @@ struct Model
 };
 
 Model create_model(int vertex_count, GLfloat * vertex_data) {
-    std::cout << "Creating Model!\n";
-    std::cout << "Size: " << vertex_count << "\n";
-    std::cout << "Data: ";
+    PRINT "Creating Model!\n";
+    PRINT "Size: " << vertex_count << "\n";
+    PRINT "Data: ";
     for (int i = 0; i < vertex_count; i++) {
         std::cout << vertex_data[i] << " ";
     }
@@ -88,11 +89,11 @@ Model create_model(int vertex_count, GLfloat * vertex_data) {
 }
 
 GLFWwindow * init() {
-    std::cout << "Initializing Engine! \n";
-    std::cout << "Initializing GLFW! \n";
+    PRINT "Initializing Engine! \n";
+    PRINT "Initializing GLFW! \n";
     if (!glfwInit())
     {
-        fprintf(stderr, "Failed to initialize GLFW\n");
+        PRINT "Failed to initialize GLFW\n";
         getchar();
         return NULL;
     }
@@ -102,36 +103,36 @@ GLFWwindow * init() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    std::cout << "Successfully initialized GLFW! \n";
+    PRINT "Successfully initialized GLFW! \n";
 
-    std::cout << "Initializing Window!\n";
+    PRINT "Initializing Window!\n";
     GLFWwindow * window;
 
     window = glfwCreateWindow(1024, 768, "Playground", NULL, NULL);
     if (window == NULL) {
-        fprintf(stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n");
+        PRINT "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n";
         getchar();
         glfwTerminate();
         return NULL;
     }
     glfwMakeContextCurrent(window);
-    std::cout << "Successfully initialized Window!\n";
+    PRINT "Successfully initialized Window!\n";
 
 
-    std::cout << "Initializing GLEW!\n";
+    PRINT "Initializing GLEW!\n";
     if (glewInit() != GLEW_OK) {
-        fprintf(stderr, "Failed to initialize GLEW\n");
+        PRINT "Failed to initialize GLEW\n";
         getchar();
         glfwTerminate();
         return NULL;
     }
-    std::cout << "Successfully initialized GLEW!\n";
+    PRINT "Successfully initialized GLEW!\n";
 
-    std::cout << "Creating VAO!\n";
+    PRINT "Creating VAO!\n";
     GLuint vertexArrayId;
     glGenVertexArrays(1, &vertexArrayId);
     glBindVertexArray(vertexArrayId);
-    std::cout << "Successfully created VAO!\n";
+    PRINT "Successfully created VAO!\n";
 
     return window;
 }
@@ -164,7 +165,7 @@ void show_model(Model model, glm::mat4 model_matrix, Shader shader, Camera camer
 
 int render(EngineInterface * interface)
 {
-    std::cout << "Launching Engine! \n";
+    PRINT "Launching Engine! \n";
     GLFWwindow * window = init();
     
     //Enable key capturing.
@@ -214,8 +215,8 @@ int render(EngineInterface * interface)
 
         for (int i = 0; i < PRE_ALLOCATE; i++) {
             if (objects[i].show) {
-                std::cout << "Rendering: " << i << "\n";
-                show_model(models[objects[i].model], objects->model_matrix, shader, cam);
+                PRINT "Rendering: " << i << "\n";
+                show_model(models[objects[i].model], objects[i].model_matrix, shader, cam);
             }
         }
 
@@ -223,63 +224,69 @@ int render(EngineInterface * interface)
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-        msg_id = interface->loadMessage();
-        std::cout << "Message is: " << msg_id << "\n";
-        switch (msg_id) {
-        case 1:
-        {
-            int oid = fetch_id(&object_id_stack);
-            std::cout << "Assigning an OID: " << oid << "\n";
-            interface->sendInt(oid);
-            break;
-        }
-        case 2:
-        {
-            int oid = interface->getId();
-            std::cout << "Freeing oid: " << oid << "\n";
-            objects[oid].show = false;
-            return_id(&object_id_stack, oid);
-            break;
-        }
-        case 3:
-        {
-            ShowArguments args = interface->getVisible();
-            std::cout << "Should I show: " << args.oid << "? " << args.show << "\n";
-            //Check if object is showable.
-            if (args.show && objects[args.oid].model == -1) {
-                std::cout << "To show an Object, it must have a model!\n";
+        do {
+            msg_id = interface->loadMessage();
+            //PRINT "Message is: " << msg_id << "\n";
+            switch (msg_id) {
+            case 1:
+            {
+                int oid = fetch_id(&object_id_stack);
+                PRINT "Assigning an OID: " << oid << "\n";
+                interface->sendInt(oid);
+                break;
             }
-            else {
-                objects[args.oid].show = args.show;
+            case 2:
+            {
+                int oid = interface->getId();
+                PRINT "Freeing oid: " << oid << "\n";
+                objects[oid].show = false;
+                return_id(&object_id_stack, oid);
+                break;
             }
-            break;
-        }
-        case 4:
-        {
-            IdTuple args = interface->getIdTuple();
-            std::cout << "Assigning Model " << args.mid << " to object " << args.oid << "\n";
-            objects[args.oid].model = args.mid;
-            break;
-        }
-        case 11:
-        {
-            std::cout << "Loading Model!\n";
-            int model_id = fetch_id(&model_id_stack);
-            VertexArray model_vertices = interface->getModel();
-            models[model_id] = create_model(model_vertices.length, model_vertices.vertex_list);
-            interface->sendInt(model_id);
-            break; 
-        }
-        case -2:
-            break;
-        default:
-            std::cout << "Unknown message!\n";
-            break;
-        }
+            case 3:
+            {
+                ShowArguments args = interface->getVisible();
+                PRINT "Should I show: " << args.oid << "? " << args.show << "\n";
+                //Check if object is showable.
+                if (args.show && objects[args.oid].model == -1) {
+                    PRINT "To show an Object, it must have a model!\n";
+                }
+                else {
+                    objects[args.oid].show = args.show;
+                }
+                break;
+            }
+            case 4:
+            {
+                IdIdTuple args = interface->getIdTuple();
+                PRINT "Assigning Model " << args.mid << " to object " << args.oid << "\n";
+                objects[args.oid].model = args.mid;
+                break;
+            }
+            case 5:
+            {
+                IdVectorTuple movement = interface->getMovement();
+                PRINT "Translating " << movement.oid << " by " << movement.change.x << " " << movement.change.y << " " << movement.change.z << " " << "!\n";
+                objects[movement.oid].model_matrix = glm::translate(objects[movement.oid].model_matrix, movement.change);
+                break;
+            }
+            case 11:
+            {
+                PRINT "Loading Model!\n";
+                int model_id = fetch_id(&model_id_stack);
+                VertexArray model_vertices = interface->getModel();
+                models[model_id] = create_model(model_vertices.length, model_vertices.vertex_list);
+                interface->sendInt(model_id);
+                break;
+            }
+            case -2:
+                break;
+            default:
+                PRINT "Unknown message!\n";
+                break;
+            }
+        } while (msg_id != -2 && msg_id); //Stop reading if either no messages remain or the msg is to stop (Id 0).
     } while (msg_id);
-    for (int i = 0; i < PRE_ALLOCATE; i++) {
-        std::cout << objects[i].show;
-    }
-    std::cout << "Terminating Engine!";
+    PRINT "Terminating Engine!";
     return 0;
 }

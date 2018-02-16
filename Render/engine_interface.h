@@ -20,6 +20,7 @@ Operation  | OpId | Argument            | Comment
  Destroy   |   2  | OId                 | Frees the given OId to be reassigned later.
  Visible   |   3  | (OId, True / False) |
  SetModel  |   4  | (OId, MId)          | Assigns the given Model to the given Object. Multiple Objects may share a Model.
+ Move      |   5  | (OId, Vector3)      | Translates the given Object by the given Vector.
  
  Model Operations
  CreateM   |  11  | [Model Points...]   | Takes a list of vertices and sends back the ID of the Model.
@@ -36,9 +37,14 @@ struct VertexArray {
     float * vertex_list;
 };
 
-struct IdTuple {
+struct IdIdTuple {
     int oid;
     int mid;
+};
+
+struct IdVectorTuple {
+    int oid;
+    glm::vec3 change;
 };
 
 class EngineInterface {
@@ -48,5 +54,6 @@ public:
     virtual int getId() = 0;
     virtual ShowArguments getVisible() = 0;
     virtual VertexArray getModel() = 0;
-    virtual IdTuple getIdTuple() = 0;
+    virtual IdIdTuple getIdTuple() = 0;
+    virtual IdVectorTuple getMovement() = 0;
 };

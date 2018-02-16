@@ -6,10 +6,51 @@ from Log import print
 
 import math
 import numpy
+import itertools
 
 #World is a grid of tupels. The first value is the block, the second the damage done to the block.
 
-blockModel = []
+blockModel = [-1.0,-1.0,-1.0,
+              -1.0,-1.0, 1.0,
+              -1.0, 1.0, 1.0, 
+               1.0, 1.0,-1.0, 
+              -1.0,-1.0,-1.0,
+              -1.0, 1.0,-1.0,
+
+               1.0,-1.0, 1.0,
+              -1.0,-1.0,-1.0,
+               1.0,-1.0,-1.0,
+               1.0, 1.0,-1.0,
+               1.0,-1.0,-1.0,
+              -1.0,-1.0,-1.0,
+
+              -1.0,-1.0,-1.0,
+              -1.0, 1.0, 1.0,
+              -1.0, 1.0,-1.0,
+               1.0,-1.0, 1.0,
+              -1.0,-1.0, 1.0,
+              -1.0,-1.0,-1.0,
+
+              -1.0, 1.0, 1.0,
+              -1.0,-1.0, 1.0,
+               1.0,-1.0, 1.0,
+               1.0, 1.0, 1.0,
+               1.0,-1.0,-1.0,
+               1.0, 1.0,-1.0,
+
+               1.0,-1.0,-1.0,
+               1.0, 1.0, 1.0,
+               1.0,-1.0, 1.0,
+               1.0, 1.0, 1.0,
+               1.0, 1.0,-1.0,
+              -1.0, 1.0,-1.0,
+
+               1.0, 1.0, 1.0,
+              -1.0, 1.0,-1.0,
+              -1.0, 1.0, 1.0,
+               1.0, 1.0, 1.0,
+              -1.0, 1.0, 1.0,
+               1.0,-1.0, 1.0]
 
 class World:
     def xyAdjust(func):
@@ -45,6 +86,13 @@ class World:
         self.grid = numpy.array([[[(BlockTypes.GRASS, 0) for i in range(height)] for j in range(size)] for j in range(size)])
         self.size = size
         self.height = height
+        self.blockModelId = RI.createModel(blockModel)
 
         print("Registering world blocks!")
-        pass #TODO: Actually register and show blocks.
+        '''
+        for x,y,z in itertools.product(range(size), range(size), range(height)):
+            id = RI.createObject()
+            RI.setModel(id, self.blockModelId)
+            RI.move(id, (x,y,z))
+            RI.setVisible(id, True)
+        '''

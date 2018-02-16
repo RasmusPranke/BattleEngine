@@ -11,7 +11,7 @@ class RenderInterfaceImpl:
     self.message = ()
 
   def loadMessage(self):
-    if self.recvPipe.poll(1):
+    if self.recvPipe.poll():
       message = self.recvPipe.recv()
       #Get the message Id, then set the message to be the arguments for the given messageId.
       ret = message[0]
@@ -69,6 +69,11 @@ def createModel(model):
     raise NameError("Not yet implemented!")
   re = render_gameSide.recv()
   return re
+
+def move(OId, vector):
+    '''Moves OId by Vector.
+       Expects any object with vaild integers accessible via indices 0-2 as vector.'''
+    render_gameSide.send((5, (OId, (vector[0],vector[1],vector[2]))))
 
 def stop():
   render_gameSide.send((0, None))
