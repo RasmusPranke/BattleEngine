@@ -89,10 +89,8 @@ class World:
         self.blockModelId = RI.createModel(blockModel)
 
         print("Registering world blocks!")
-        '''
-        for x,y,z in itertools.product(range(size), range(size), range(height)):
+        for x,y,z in itertools.product(range(size), range(height), range(size)):
             id = RI.createObject()
             RI.setModel(id, self.blockModelId)
             RI.move(id, (x,y,z))
             RI.setVisible(id, True)
-        '''

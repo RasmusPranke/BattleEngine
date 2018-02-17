@@ -837,7 +837,7 @@ typedef void (* GLFWwindowposfun)(GLFWwindow*,int,int);
 
 /*! @brief The function signature for window resize callbacks.
  *
- *  This is the function signature for window size callback functions.
+ *  This is the function signature for window max_offset callback functions.
  *
  *  @param[in] window The window that was resized.
  *  @param[in] width The new width, in screen coordinates, of the window.
@@ -1179,7 +1179,7 @@ typedef struct GLFWgammaramp
     unsigned short* blue;
     /*! The number of elements in each array.
      */
-    unsigned int size;
+    unsigned int max_offset;
 } GLFWgammaramp;
 
 /*! @brief Image data.

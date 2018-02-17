@@ -10,11 +10,11 @@
 namespace glm{
 namespace detail
 {
-	template<typename T, std::size_t size, bool aligned>
+	template<typename T, std::size_t max_offset, bool aligned>
 	struct storage
 	{
 		typedef struct type {
-			uint8 data[size];
+			uint8 data[max_offset];
 		} type;
 	};
 

@@ -44,8 +44,6 @@ class Modes(Enum):
         for ac in game.actors:
             ac.act()
         
-
-
     GAME = (1, cubeDraw, GAMEupdate)
 
     def __init__(self, id, drawMethod, updateMethod):
@@ -103,30 +101,33 @@ class Game:
         self.update = mode.updateMethod
 
     def run(self):
-      r = random.random
-      def rxy():
-          return (r() * 2) - 1
+      rand = random.random
+      def r():
+          return (rand() * 2) - 1
       
       #Creates a square.
-      model = [1,1,0,1,-1,0,-1,1,0,
-               -1,-1,0,1,-1,0,-1,1,0]
-      modelId = RI.createModel(model)
-      id = RI.createObject()
-      RI.setModel(id, modelId)
-      RI.setVisible(id, True)
-      for i in range(4):
-        input("Press Enter to continue...")
-        RI.move(id, (rxy(), rxy(), rxy()))
-      
+      #model = [1,1,0,1,-1,0,-1,1,0,
+      #         -1,-1,0,1,-1,0,-1,1,0]
+      #modelId = RI.createModel(model)
+      #id = RI.createObject()
+      #RI.setModel(id, modelId)
+      #RI.setVisible(id, True)
       ''' #Creates random triangles
       for i in range(10):
-        model = [rxy(), rxy(),0,rxy(), rxy(),0,rxy(), rxy(),0,rxy(), rxy(),0,rxy(), rxy(),0,rxy(), rxy(),0,rxy(), rxy(),0,rxy(), rxy(),0,rxy(), rxy(),0,rxy(), rxy(),0,rxy(), rxy(),0,rxy(), rxy(),0]
+        model = [r(), r(),r(),r(), r(),r(),r(), r(),r(),r(), r(),r(),r(), r(),r(),r(), r(),r(),r(), r(),r(),r(), r(),r(),r(), r(),r(),r(), r(),r(),r(), r(),r(),r(), r(),r()]
         modelId = RI.createModel(model)
         RI.setModel(id, modelId)
         RI.setVisible(id, True)
         input("Press Enter to continue...")
-     '''
-
+      for i in range(10):
+        input("Press Enter to continue...")
+        RI.rotateCam((0,1,0), 0.25)
+      '''
+      RI.moveCam((0,0,-5))
+      while True:
+        input("Press Enter to continue...")
+        RI.rotateCam((0, 1, 0), 0.2)
+      
     def __init__(self, inPipe):
         self.actionList = {}
         

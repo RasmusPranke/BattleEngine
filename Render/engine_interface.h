@@ -13,22 +13,38 @@ Operations are encoded as follows :
 OpId is the operation id, as described in the table below.
 Argument is all information required by the renderer, encoded as a list of list of floating point values.
 
-Operation  | OpId | Argument            | Comment
- RESERVED  |  -1  |                     | Reserved for Engine internals.Don't use this as a message ID.
- Stop      |   0  | None                | Tells the rendering engine to terminate.
- Create    |   1  | None                | Returns an unused ObjectId and marks it as used.
- Destroy   |   2  | OId                 | Frees the given OId to be reassigned later.
- Visible   |   3  | (OId, True / False) |
- SetModel  |   4  | (OId, MId)          | Assigns the given Model to the given Object. Multiple Objects may share a Model.
- Move      |   5  | (OId, Vector3)      | Translates the given Object by the given Vector.
+Operation  | OpId | Argument                 | Comment
+ RESERVED  |  -1  |                          | Reserved for Engine internals.Don't use this as a message ID.
+ Stop      |   0  | None                     | Tells the rendering engine to terminate.
+
+ Create    |   1  | None                     | Returns an unused ObjectId and marks it as used.
+ Destroy   |   2  | OId                      | Frees the given OId to be reassigned later.
+ Visible   |   3  | (OId, True / False)      |
+
+ SetModel  |   4  | (OId, MId)               | Assigns the given Model to the given Object. Multiple Objects may share a Model.
+ SetTexture|   8  | (OId, TId)               | Assigns the given Texture to the given Object.
+
+ Move      |   5  | (OId, Vector3)           | Translates the given Object by the given Vector.
+ Rotate    |   6  | (OId,Vector3,radian)     | Rotates the Object radians around the axis given by the vector 
+ Scale     |   7  | (OId, Vector3)           | Scales the Object by the given amount along each of the axis.
  
  Model Operations
- CreateM   |  11  | [Model Points...]   | Takes a list of vertices and sends back the ID of the Model.
- CreateM   |  12  | FileName            | Loads a model from the given file and sends back the ID of that Model.
+ CreateM   |  11  | [Model Points...]        | Takes a list of vertices and sends back the ID of the Model.
+ MISSING:
+ CreateM   |  12  | FileName                 | Loads a model from the given file and sends back the ID of that Model.
+
+ Texture Operations
+ CreateM   |  31  |(MId, [Texture Points...])| Takes a list of colors for a model and sends back the ID of the Texture.
+ MISSING:
+ CreateM   |  32  | FileName                 | Loads a model from the given file and sends back the ID of that Model.
+
+ Camera Operations
+ MoveCam   |   25  | (CId, Vector3)      | Translates the given Camera by the given Vector.
+ RotateCam |   26  | (CId,Vector3,radian)| Rotates the Camera radians around the axis given by the vector 
 */
 
 struct ShowArguments {
-    int oid;
+    int id;
     bool show;
 };
 
@@ -38,13 +54,24 @@ struct VertexArray {
 };
 
 struct IdIdTuple {
-    int oid;
+    int id;
     int mid;
 };
 
 struct IdVectorTuple {
-    int oid;
+    int id;
     glm::vec3 change;
+};
+
+struct IdRotationTuple {
+    int id;
+    glm::vec3 axis;
+    float rotation_in_2pi;
+};
+
+struct IdArrayTuple{
+    int id;
+    VertexArray arr;
 };
 
 class EngineInterface {
@@ -55,5 +82,7 @@ public:
     virtual ShowArguments getVisible() = 0;
     virtual VertexArray getModel() = 0;
     virtual IdIdTuple getIdTuple() = 0;
-    virtual IdVectorTuple getMovement() = 0;
+    virtual IdVectorTuple getVector() = 0;
+    virtual IdRotationTuple getRotation() = 0;
+    virtual IdArrayTuple getIdArray() = 0;
 };

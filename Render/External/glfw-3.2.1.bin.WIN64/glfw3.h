@@ -1179,7 +1179,7 @@ typedef struct GLFWgammaramp
     unsigned short* blue;
     /*! The number of elements in each array.
      */
-    unsigned int size;
+    unsigned int max_offset;
 } GLFWgammaramp;
 
 /*! @brief Image data.

@@ -18,12 +18,15 @@ public:
     ShowArguments getVisible();
     VertexArray getModel();
     IdIdTuple getIdTuple();
-    IdVectorTuple getMovement();
+    IdVectorTuple getVector();
+    IdRotationTuple getRotation();
+    IdArrayTuple getIdArray();
     EngineInterfaceImpl(PyObject * givenPyInterface);
     ~EngineInterfaceImpl();
 private:
     PyObject * messageInterface;
     PyObject * getMessage();
+    VertexArray extractArray(PyObject * list);
 };
 
 int EngineInterfaceImpl::loadMessage()
@@ -45,22 +48,74 @@ int EngineInterfaceImpl::getId() {
 ShowArguments EngineInterfaceImpl::getVisible()
 {
     ShowArguments args;
+
     PyObject * msg = getMessage();
-    PyArg_ParseTuple(msg, "ip", &args.oid, &args.show);
+    PyArg_ParseTuple(msg, "ip", &args.id, &args.show);
+
     return args;
 }
 VertexArray EngineInterfaceImpl::getModel() {
-    VertexArray ret;
-    
     PyObject * msg = getMessage();
-    Py_ssize_t size = PyList_Size(msg);
-    int int_size = PyLong_AsLong(PyLong_FromSsize_t(size));
+    return extractArray(msg);
+}
+IdIdTuple EngineInterfaceImpl::getIdTuple()
+{
+    IdIdTuple tuple;
+
+    PyObject * msg = getMessage();
+    PyArg_ParseTuple(msg, "ii", &tuple.id, &tuple.mid);
+
+    return tuple;
+}
+IdVectorTuple EngineInterfaceImpl::getVector()
+{
+    IdVectorTuple tuple;
+    PyObject * coordinateTuple;
+    float x, y, z;
+
+    PyObject * msg = getMessage();
+    PyArg_ParseTuple(msg, "iO", &tuple.id, &coordinateTuple);
+    PyArg_ParseTuple(coordinateTuple, "fff", &x, &y, &z);
+
+    tuple.change = glm::vec3(x, y, z);
+
+    return tuple;
+}
+IdRotationTuple EngineInterfaceImpl::getRotation()
+{
+    IdRotationTuple tuple;
+    PyObject * coordinateTuple;
+    float x, y, z;
+
+    PyObject * msg = getMessage();
+    PyArg_ParseTuple(msg, "iOf", &tuple.id, &coordinateTuple, &tuple.rotation_in_2pi);
+    PyArg_ParseTuple(coordinateTuple, "fff", &x, &y, &z);
+
+    tuple.axis = glm::vec3(x, y, z);
+
+    return tuple;
+}
+IdArrayTuple EngineInterfaceImpl::getIdArray() {
+    PyObject * msg = getMessage();
+    PyObject * list;
+    IdArrayTuple ret;
+
+    PyArg_ParseTuple(msg, "iO", &ret.id, &list);
+    ret.arr = extractArray(list);
+
+    return ret;
+}
+
+VertexArray EngineInterfaceImpl::extractArray(PyObject * list) {
+    VertexArray ret;
+    Py_ssize_t max_offset = PyList_Size(list);
+    int int_size = PyLong_AsLong(PyLong_FromSsize_t(max_offset));
 
     float * vertices = (float*)malloc(sizeof(vertices) * int_size);
 
     for (int i = 0; i < int_size; i++) {
         ssize_t itemPos = i;
-        PyObject * item = PyList_GetItem(msg, itemPos);
+        PyObject * item = PyList_GetItem(list, itemPos);
         vertices[i] = PyFloat_AsDouble(item);
         std::cout << vertices[i] << " ";
     }
@@ -70,24 +125,7 @@ VertexArray EngineInterfaceImpl::getModel() {
     ret.vertex_list = vertices;
     return ret;
 }
-IdIdTuple EngineInterfaceImpl::getIdTuple()
-{
-    IdIdTuple tuple;
-    PyObject * msg = getMessage();
-    PyArg_ParseTuple(msg, "ii", &tuple.oid, &tuple.mid);
-    return tuple;
-}
-IdVectorTuple EngineInterfaceImpl::getMovement()
-{
-    IdVectorTuple tuple;
-    PyObject * coordinateTuple;
-    float x, y, z = -5;
-    PyObject * msg = getMessage();
-    PyArg_ParseTuple(msg, "iO", &tuple.oid, &coordinateTuple);
-    PyArg_ParseTuple(coordinateTuple, "fff", &x, &y, &z);
-    tuple.change = glm::vec3(x, y, z);
-    return tuple;
-}
+
 EngineInterfaceImpl::EngineInterfaceImpl(PyObject * pyInterface)
 {
     messageInterface = pyInterface;

@@ -72,8 +72,24 @@ def createModel(model):
 
 def move(OId, vector):
     '''Moves OId by Vector.
-       Expects any object with vaild integers accessible via indices 0-2 as vector.'''
+       Expects any object with vaild numbers accessible via indices 0-2 as vector.'''
     render_gameSide.send((5, (OId, (vector[0],vector[1],vector[2]))))
+
+def rotate(OId, vector, amount):
+    render_gameSide.send((6, (OId, (vector[0],vector[1],vector[2]), amount)))
+
+def scale(OId, vector):
+    '''Scales OId by Vector.
+       Expects any object with vaild numbers accessible via indices 0-2 as vector.'''
+    render_gameSide.send((7, (OId, (vector[0],vector[1],vector[2]))))
+
+def moveCam(vector):
+    '''Moves OId by Vector.
+       Expects any object with vaild numbers accessible via indices 0-2 as vector.'''
+    render_gameSide.send((25, (0, (vector[0],vector[1],vector[2]))))
+
+def rotateCam(vector, amount):
+    render_gameSide.send((26, (0, (vector[0],vector[1],vector[2]), amount)))
 
 def stop():
   render_gameSide.send((0, None))

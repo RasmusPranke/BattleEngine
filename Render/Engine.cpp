@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 
 #include <glew.h>
 #include <glfw3.h>
@@ -10,7 +11,24 @@
 #include "engine_interface.h"
 #include "shader_loader.h"
 
-const int PRE_ALLOCATE = 1000;
+/*
+constexpr int pow(int a, int b) {
+    int result = 1;
+    for (int i = 0; i < b; i++) {
+        result *= a;
+    }
+    return result;
+}
+*/
+
+//const int PRE_ALLOCATE_OBJECTS_BITS = 10;
+constexpr int PRE_ALLOCATE_OBJECTS = 1024; //pow(2, PRE_ALLOCATE_OBJECTS_BITS);
+
+//const int PRE_ALLOCATE_MODELS_BITS = 10;
+constexpr int PRE_ALLOCATE_MODELS = 128; //pow(2, PRE_ALLOCATE_OBJECTS_BITS);
+
+//const int PRE_ALLOCATE_TEXTURES_BITS = 10;
+constexpr int PRE_ALLOCATE_TEXTURES = 32; //pow(2, PRE_ALLOCATE_OBJECTS_BITS);
 
 /*
 Keeps track which Ids are available (NOT which are used).
@@ -19,13 +37,31 @@ fetch_id will then always return an unused Id, while return_id will mark that id
 */
 struct IdStack 
 {
-    int offset = 0;
-    int size = 0;
+    unsigned int offset;
+    unsigned int max_offset; 
     int * id_list;
 };
 
+IdStack create_id_stack(int size) {
+    PRINT "Creating stack of size: " << size << "\n";
+    IdStack stack;
+    int max_offset = size - 1;
+    PRINT "Max offset: " << max_offset << "\n";
+    stack.max_offset = max_offset;
+    stack.offset = 0;
+
+    int * ids = (int*)malloc(size * sizeof(ids));
+    for (int i = 0; i < size; i++) {
+        ids[i] = i;
+    }
+    stack.id_list = ids;
+
+    return stack;
+}
+
 int fetch_id(IdStack * stack) {
-    if (stack->offset >= stack->size) {
+    PRINT "Stack max offset: " << stack->max_offset << "\n";
+    if (stack->offset > stack->max_offset) {
         throw "Can't fetch id, idStack is empty!\n";
     }
     int ret = stack->id_list[stack->offset];
@@ -57,6 +93,7 @@ struct RenderObject
 {
     bool show = false;
     int model = -1;
+    int texture = 0;
     glm::mat4 model_matrix = glm::mat4(1.0f);
 };
 
@@ -69,15 +106,26 @@ struct Model
 {
     int vertex_count;
     GLuint vertex_buffer;
+
+    IdStack texture_ids = create_id_stack(PRE_ALLOCATE_TEXTURES);
+    int texture_count = PRE_ALLOCATE_TEXTURES;
+    GLuint textures[PRE_ALLOCATE_TEXTURES];
 };
 
-Model create_model(int vertex_count, GLfloat * vertex_data) {
-    PRINT "Creating Model!\n";
-    PRINT "Size: " << vertex_count << "\n";
-    PRINT "Data: ";
-    for (int i = 0; i < vertex_count; i++) {
-        std::cout << vertex_data[i] << " ";
+int create_texture(Model * model, VertexArray texture) {
+    if (texture.length != model->vertex_count) {
+        PRINT "Texture point count does not match model size!\n";
+        return -1;
     }
+
+    int id = fetch_id(&model->texture_ids);
+    glGenBuffers(1, &model->textures[id]);
+    glBindBuffer(GL_ARRAY_BUFFER, model->textures[id]);
+    glBufferData(GL_ARRAY_BUFFER, texture.length * sizeof(texture.vertex_list), texture.vertex_list, GL_STATIC_DRAW);
+    return id;
+}
+
+Model create_model(int vertex_count, GLfloat * vertex_data) {
     std::cout << "\n";
 
     Model model = Model();
@@ -85,6 +133,17 @@ Model create_model(int vertex_count, GLfloat * vertex_data) {
     glBindBuffer(GL_ARRAY_BUFFER, model.vertex_buffer);
     glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(vertex_data), vertex_data, GL_STATIC_DRAW);
     model.vertex_count = vertex_count;
+
+    GLfloat * default_texture_data = (GLfloat*)malloc(vertex_count * sizeof(default_texture_data));
+    for (int i = 0; i < vertex_count; i++) {
+        default_texture_data[i] = 1;
+    }
+    VertexArray texture;
+    texture.length = vertex_count;
+    texture.vertex_list = default_texture_data;
+    create_texture(&model, texture);
+    free(default_texture_data);
+
     return model;
 }
 
@@ -137,15 +196,18 @@ GLFWwindow * init() {
     return window;
 }
 
-void show_model(Model model, glm::mat4 model_matrix, Shader shader, Camera camera) {
+void show_object(RenderObject object, Model * models, Shader shader, Camera camera) {
+    Model model = models[object.model];
+
     //Calculate the MVP matrix
-    glm::mat4 mvp = camera.projection_matrix * camera.view_matrix * model_matrix;
+    glm::mat4 mvp = camera.projection_matrix * camera.view_matrix * object.model_matrix;
 
     // 1rst attribute buffer : vertices
 
         // Use our shader
     glUseProgram(shader.program_id);
     glUniformMatrix4fv(shader.mvp_handle, 1, GL_FALSE, &mvp[0][0]);
+
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, model.vertex_buffer);
     glVertexAttribPointer(
@@ -157,10 +219,22 @@ void show_model(Model model, glm::mat4 model_matrix, Shader shader, Camera camer
         (void*)0            // array buffer offset
     );
 
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, model.textures[object.texture]);
+    glVertexAttribPointer(
+        1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+        3,                                // size
+        GL_FLOAT,                         // type
+        GL_FALSE,                         // normalized?
+        0,                                // stride
+        (void*)0                          // array buffer offset
+    );
+
     // Draw the triangle !
-    glDrawArrays(GL_TRIANGLES, 0, model.vertex_count); // 3 indices starting at 0 -> 1 triangle
+    glDrawArrays(GL_TRIANGLES, 0, model.vertex_count);
 
     glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
 }
 
 int render(EngineInterface * interface)
@@ -175,34 +249,23 @@ int render(EngineInterface * interface)
     glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
     //Initialize the Object list and its Id stack.
-    RenderObject objects[PRE_ALLOCATE];
-    IdStack object_id_stack;
-    int oids[PRE_ALLOCATE];
-    for (int i = 0; i < PRE_ALLOCATE; i++) {
-        oids[i] = i;
-    }
-    object_id_stack.size = sizeof(oids);
-    object_id_stack.id_list = &(*oids);
+    RenderObject objects[PRE_ALLOCATE_OBJECTS];
+    IdStack object_id_stack = create_id_stack(PRE_ALLOCATE_OBJECTS);
 
     //Initialize the Model list and its Id stack.
-    Model models[PRE_ALLOCATE];
-    IdStack model_id_stack;
-    int mids[PRE_ALLOCATE];
-    for (int i = 0; i < PRE_ALLOCATE; i++) {
-        mids[i] = i;
-    }
-    model_id_stack.size = sizeof(mids);
-    model_id_stack.id_list = &(*mids);
+    PRINT "Allocating: " << PRE_ALLOCATE_OBJECTS << "\n";
+    Model models[PRE_ALLOCATE_OBJECTS];
+    IdStack model_id_stack = create_id_stack(PRE_ALLOCATE_OBJECTS);
 
     //Load shader
     Shader shader = load_shader("SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader");
 
     //Initialize default camera.
     //TODO: UI camera
-    Camera cam;
-    cam.projection_matrix = glm::perspective(glm::radians(45.0f), (float) 4.0f / (float)3.0f, 0.1f, 100.0f);
-    cam.view_matrix = glm::lookAt(
-        glm::vec3(4, 3, 3), // Camera is at (4,3,3), in World Space
+    Camera cams[PRE_ALLOCATE_OBJECTS];
+    cams[0].projection_matrix = glm::perspective(glm::radians(45.0f), (float) 4.0f / (float)3.0f, 0.1f, 1000.0f);
+    cams[0].view_matrix = glm::lookAt(
+        glm::vec3(0, 0, 3), // Camera is at (4,3,3), in World Space
         glm::vec3(0, 0, 0), // and looks at the origin
         glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
     );
@@ -213,10 +276,9 @@ int render(EngineInterface * interface)
         // Clear the screen
         glClear(GL_COLOR_BUFFER_BIT);
 
-        for (int i = 0; i < PRE_ALLOCATE; i++) {
+        for (int i = 0; i < PRE_ALLOCATE_OBJECTS; i++) {
             if (objects[i].show) {
-                PRINT "Rendering: " << i << "\n";
-                show_model(models[objects[i].model], objects[i].model_matrix, shader, cam);
+                show_object(objects[i], models, shader, cams[0]);
             }
         }
 
@@ -228,57 +290,99 @@ int render(EngineInterface * interface)
             msg_id = interface->loadMessage();
             //PRINT "Message is: " << msg_id << "\n";
             switch (msg_id) {
-            case 1:
+            case 1: //Assign OId
             {
-                int oid = fetch_id(&object_id_stack);
-                PRINT "Assigning an OID: " << oid << "\n";
-                interface->sendInt(oid);
+                int object_id = fetch_id(&object_id_stack);
+                PRINT "Assigning an OID: " << object_id << "\n";
+                interface->sendInt(object_id);
                 break;
             }
-            case 2:
+            case 2: //Set Object invisible and set the OId as available (i.e. "destroy" the object)
             {
-                int oid = interface->getId();
-                PRINT "Freeing oid: " << oid << "\n";
-                objects[oid].show = false;
-                return_id(&object_id_stack, oid);
+                int object_id = interface->getId();
+                PRINT "Freeing oid: " << object_id << "\n";
+                objects[object_id].show = false;
+                return_id(&object_id_stack, object_id);
                 break;
             }
-            case 3:
+            case 3: //Set Object Visible/Invisible
             {
                 ShowArguments args = interface->getVisible();
-                PRINT "Should I show: " << args.oid << "? " << args.show << "\n";
+                PRINT "Should I show: " << args.id << "? " << args.show << "\n";
                 //Check if object is showable.
-                if (args.show && objects[args.oid].model == -1) {
+                if (args.show && objects[args.id].model == -1) {
                     PRINT "To show an Object, it must have a model!\n";
                 }
                 else {
-                    objects[args.oid].show = args.show;
+                    objects[args.id].show = args.show;
                 }
                 break;
             }
-            case 4:
+            case 4: //Assign a model to an object
             {
                 IdIdTuple args = interface->getIdTuple();
-                PRINT "Assigning Model " << args.mid << " to object " << args.oid << "\n";
-                objects[args.oid].model = args.mid;
+                PRINT "Assigning Model " << args.mid << " to object " << args.id << "\n";
+                objects[args.id].model = args.mid;
                 break;
             }
-            case 5:
+            case 5: //Translate an Object
             {
-                IdVectorTuple movement = interface->getMovement();
-                PRINT "Translating " << movement.oid << " by " << movement.change.x << " " << movement.change.y << " " << movement.change.z << " " << "!\n";
-                objects[movement.oid].model_matrix = glm::translate(objects[movement.oid].model_matrix, movement.change);
+                IdVectorTuple movement = interface->getVector();
+                PRINT "Translating " << movement.id << " by " << movement.change.x << " " << movement.change.y << " " << movement.change.z << " " << "!\n";
+                objects[movement.id].model_matrix = glm::translate(objects[movement.id].model_matrix, movement.change);
                 break;
             }
-            case 11:
+            case 6: //Rotate an Object
+            {
+                IdRotationTuple rotation = interface->getRotation();
+                PRINT "Rotating " << rotation.id << " around " << rotation.axis.x << " " << rotation.axis.y << " " << rotation.axis.z << " by " << rotation.rotation_in_2pi << "!\n";
+                objects[rotation.id].model_matrix = glm::rotate(objects[rotation.id].model_matrix, rotation.rotation_in_2pi, rotation.axis);
+                break;
+            }
+            case 7: //Scale an Object
+            {
+                IdVectorTuple scaling = interface->getVector();
+                PRINT "Scaling " << scaling.id << " by " << scaling.change.x << " " << scaling.change.y << " " << scaling.change.z << " " << "!\n";
+                objects[scaling.id].model_matrix = glm::scale(objects[scaling.id].model_matrix, scaling.change);
+                break;
+            }
+            case 11: //Load an Model as an Array
             {
                 PRINT "Loading Model!\n";
                 int model_id = fetch_id(&model_id_stack);
+                PRINT "Fetched id!\n";
                 VertexArray model_vertices = interface->getModel();
                 models[model_id] = create_model(model_vertices.length, model_vertices.vertex_list);
                 interface->sendInt(model_id);
+                free(model_vertices.vertex_list);
                 break;
             }
+            case 25: //Translate an Camera
+            {
+                IdVectorTuple movement = interface->getVector();
+                PRINT "Translating Camera " << movement.id << " by " << movement.change.x << " " << movement.change.y << " " << movement.change.z << " " << "!\n";
+                cams[movement.id].view_matrix = glm::translate(cams[movement.id].view_matrix, movement.change);
+                break;
+            }
+            case 26: //Rotate an Camera
+            {
+                IdRotationTuple rotation = interface->getRotation();
+                PRINT "Rotating Camera " << rotation.id << " around " << rotation.axis.x << " " << rotation.axis.y << " " << rotation.axis.z << " by " << rotation.rotation_in_2pi << "!\n";
+                cams[rotation.id].view_matrix = glm::rotate(cams[rotation.id].view_matrix, -rotation.rotation_in_2pi, rotation.axis);
+                break;
+            }
+            case 31: //Load an Texture as an Array
+            {
+                PRINT "Loading Texture!\n";
+                IdArrayTuple source = interface->getIdArray();
+                VertexArray arr = source.arr;
+                Model model = models[source.id];
+                interface->sendInt(create_texture(&model, arr));
+                break;
+            }
+            case 0:
+                PRINT "Recieved shutdown signal!\n";
+                break;
             case -2:
                 break;
             default:
