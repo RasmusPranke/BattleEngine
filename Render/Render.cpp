@@ -63,7 +63,7 @@ IdIdTuple EngineInterfaceImpl::getIdTuple()
     IdIdTuple tuple;
 
     PyObject * msg = getMessage();
-    PyArg_ParseTuple(msg, "ii", &tuple.id, &tuple.mid);
+    PyArg_ParseTuple(msg, "ii", &tuple.id, &tuple.id2);
 
     return tuple;
 }

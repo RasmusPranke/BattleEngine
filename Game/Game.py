@@ -5,7 +5,6 @@ from enum import Enum
 
 from World import World
 from Actor import Actor
-from Blocks import BlockTypes
 from Log import print
 import RenderInterface as RI
 

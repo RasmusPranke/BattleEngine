@@ -43,10 +43,8 @@ struct IdStack
 };
 
 IdStack create_id_stack(int size) {
-    PRINT "Creating stack of size: " << size << "\n";
     IdStack stack;
     int max_offset = size - 1;
-    PRINT "Max offset: " << max_offset << "\n";
     stack.max_offset = max_offset;
     stack.offset = 0;
 
@@ -60,7 +58,6 @@ IdStack create_id_stack(int size) {
 }
 
 int fetch_id(IdStack * stack) {
-    PRINT "Stack max offset: " << stack->max_offset << "\n";
     if (stack->offset > stack->max_offset) {
         throw "Can't fetch id, idStack is empty!\n";
     }
@@ -321,8 +318,15 @@ int render(EngineInterface * interface)
             case 4: //Assign a model to an object
             {
                 IdIdTuple args = interface->getIdTuple();
-                PRINT "Assigning Model " << args.mid << " to object " << args.id << "\n";
-                objects[args.id].model = args.mid;
+                PRINT "Assigning Model " << args.id2 << " to object " << args.id << "\n";
+                objects[args.id].model = args.id2;
+                break;
+            }
+            case 8: //Assign a texture to an object
+            {
+                IdIdTuple args = interface->getIdTuple();
+                PRINT "Assigning Texture " << args.id2 << " to object " << args.id << "\n";
+                objects[args.id].texture = args.id2;
                 break;
             }
             case 5: //Translate an Object
@@ -376,8 +380,9 @@ int render(EngineInterface * interface)
                 PRINT "Loading Texture!\n";
                 IdArrayTuple source = interface->getIdArray();
                 VertexArray arr = source.arr;
-                Model model = models[source.id];
-                interface->sendInt(create_texture(&model, arr));
+                Model * model = &models[source.id];
+                int id = create_texture(model, arr);
+                interface->sendInt(id);
                 break;
             }
             case 0:
@@ -389,8 +394,8 @@ int render(EngineInterface * interface)
                 PRINT "Unknown message!\n";
                 break;
             }
-        } while (msg_id != -2 && msg_id); //Stop reading if either no messages remain or the msg is to stop (Id 0).
-    } while (msg_id);
+        } while (msg_id != -2 && msg_id != 0); //Stop reading if either no messages remain or the msg is to stop (Id 0).
+    } while (msg_id != 0);
     PRINT "Terminating Engine!";
     return 0;
 }

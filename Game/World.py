@@ -1,56 +1,15 @@
-from Blocks import BlockTypes
 from Vectors import CardinalDirections
 import Vectors
 import RenderInterface as RI
 from Log import print
+from Blocks import BlockTypes, getModel, getTexture
 
 import math
 import numpy
 import itertools
+import noise
 
 #World is a grid of tupels. The first value is the block, the second the damage done to the block.
-
-blockModel = [-1.0,-1.0,-1.0,
-              -1.0,-1.0, 1.0,
-              -1.0, 1.0, 1.0, 
-               1.0, 1.0,-1.0, 
-              -1.0,-1.0,-1.0,
-              -1.0, 1.0,-1.0,
-
-               1.0,-1.0, 1.0,
-              -1.0,-1.0,-1.0,
-               1.0,-1.0,-1.0,
-               1.0, 1.0,-1.0,
-               1.0,-1.0,-1.0,
-              -1.0,-1.0,-1.0,
-
-              -1.0,-1.0,-1.0,
-              -1.0, 1.0, 1.0,
-              -1.0, 1.0,-1.0,
-               1.0,-1.0, 1.0,
-              -1.0,-1.0, 1.0,
-              -1.0,-1.0,-1.0,
-
-              -1.0, 1.0, 1.0,
-              -1.0,-1.0, 1.0,
-               1.0,-1.0, 1.0,
-               1.0, 1.0, 1.0,
-               1.0,-1.0,-1.0,
-               1.0, 1.0,-1.0,
-
-               1.0,-1.0,-1.0,
-               1.0, 1.0, 1.0,
-               1.0,-1.0, 1.0,
-               1.0, 1.0, 1.0,
-               1.0, 1.0,-1.0,
-              -1.0, 1.0,-1.0,
-
-               1.0, 1.0, 1.0,
-              -1.0, 1.0,-1.0,
-              -1.0, 1.0, 1.0,
-               1.0, 1.0, 1.0,
-              -1.0, 1.0, 1.0,
-               1.0,-1.0, 1.0]
 
 class World:
     def xyAdjust(func):
@@ -83,14 +42,17 @@ class World:
         return self.size > x >= 0 and self.size > y >= 0 and self.height > z >= 0
         
     def __init__(self, size, height):
-        self.grid = numpy.array([[[(BlockTypes.GRASS, 0) for i in range(height)] for j in range(size)] for j in range(size)])
+        self.grid = numpy.array([[[(BlockTypes.GRASS, 0) for i in range(size)] for j in range(height)] for j in range(size)])
         self.size = size
         self.height = height
-        self.blockModelId = RI.createModel(blockModel)
 
         print("Registering world blocks!")
         for x,y,z in itertools.product(range(size), range(height), range(size)):
+            block = self.grid[x, y, z][0]
             id = RI.createObject()
-            RI.setModel(id, self.blockModelId)
+            RI.setModel(id, getModel(block))
+            TId = getTexture(block)
+            print(TId)
+            RI.setTexture(id, TId)
             RI.move(id, (x,y,z))
             RI.setVisible(id, True)

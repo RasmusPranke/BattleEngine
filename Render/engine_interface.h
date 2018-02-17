@@ -34,7 +34,7 @@ Operation  | OpId | Argument                 | Comment
  CreateM   |  12  | FileName                 | Loads a model from the given file and sends back the ID of that Model.
 
  Texture Operations
- CreateM   |  31  |(MId, [Texture Points...])| Takes a list of colors for a model and sends back the ID of the Texture.
+ CreateT   |  31  |(MId, [Texture Points...])| Takes a list of colors for a model and sends back the ID of the Texture.
  MISSING:
  CreateM   |  32  | FileName                 | Loads a model from the given file and sends back the ID of that Model.
 
@@ -55,7 +55,7 @@ struct VertexArray {
 
 struct IdIdTuple {
     int id;
-    int mid;
+    int id2;
 };
 
 struct IdVectorTuple {

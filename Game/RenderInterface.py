@@ -64,11 +64,24 @@ def setModel(OId, MId):
 
 def createModel(model):
   if not isinstance(model, str):
+    model = [x for x in model]
     render_gameSide.send((11, model))
   else:
-    raise NameError("Not yet implemented!")
+    raise NameError("File loading not yet implemented!")
   re = render_gameSide.recv()
   return re
+
+def createTexture(MId, texture):
+  if not isinstance(texture, str):
+    texture = [x for x in texture]
+    render_gameSide.send((31, (MId, texture)))
+  else:
+    raise NameError("File loading not yet implemented!")
+  re = render_gameSide.recv()
+  return re
+
+def setTexture(OId, TId):
+    render_gameSide.send((8, (OId, TId)))
 
 def move(OId, vector):
     '''Moves OId by Vector.

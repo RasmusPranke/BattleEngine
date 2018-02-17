@@ -11,5 +11,6 @@ def exit():
 if __name__ == "__main__":
   #from RenderTest import test
   #test()
-  Game.start(RI.initilaizeRender())
+  pipe = RI.initilaizeRender()
+  Game.start(pipe)
   exit()
