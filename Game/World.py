@@ -43,6 +43,13 @@ class World:
         
     def __init__(self, size, height):
         self.grid = numpy.array([[[(BlockTypes.GRASS, 0) for i in range(size)] for j in range(height)] for j in range(size)])
+        for x,z in itertools.product(range(size), range(size)):
+            for y in range(height):
+                h = (y - 1)/height
+                if h < 0.25:
+                    self.grid[x,y,z] = BlockTypes.WALL
+                if h > 0.75:
+                    self.grid[x,y,z] = BlockTypes.AIR
         self.size = size
         self.height = height
 
@@ -52,7 +59,6 @@ class World:
             id = RI.createObject()
             RI.setModel(id, getModel(block))
             TId = getTexture(block)
-            print(TId)
             RI.setTexture(id, TId)
             RI.move(id, (x,y,z))
-            RI.setVisible(id, True)
+            RI.setVisible(id, block.show)

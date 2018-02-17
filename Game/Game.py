@@ -131,4 +131,4 @@ class Game:
         self.actionList = {}
         
         print("Creating World!")
-        self.gameWorld = World(5, 3)
+        self.gameWorld = World(5, 4)
