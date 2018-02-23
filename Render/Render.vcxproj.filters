@@ -23,6 +23,9 @@
     <ClCompile Include="shader_loader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="quaternion_utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="setup.py">
@@ -51,6 +54,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="quaternion_utils.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

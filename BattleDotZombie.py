@@ -1,6 +1,3 @@
-from multiprocessing import Process, Pipe
-from time import sleep
-
 import RenderInterface as RI
 import Game
 

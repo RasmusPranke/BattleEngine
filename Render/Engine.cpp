@@ -13,32 +13,32 @@
 
 /*
 constexpr int pow(int a, int b) {
-    int result = 1;
-    for (int i = 0; i < b; i++) {
-        result *= a;
-    }
-    return result;
+int result = 1;
+for (int i = 0; i < b; i++) {
+result *= a;
+}
+return result;
 }
 */
 
 //const int PRE_ALLOCATE_OBJECTS_BITS = 10;
 constexpr int PRE_ALLOCATE_OBJECTS = 1024; //pow(2, PRE_ALLOCATE_OBJECTS_BITS);
 
-//const int PRE_ALLOCATE_MODELS_BITS = 10;
+                                           //const int PRE_ALLOCATE_MODELS_BITS = 10;
 constexpr int PRE_ALLOCATE_MODELS = 128; //pow(2, PRE_ALLOCATE_OBJECTS_BITS);
 
-//const int PRE_ALLOCATE_TEXTURES_BITS = 10;
+                                         //const int PRE_ALLOCATE_TEXTURES_BITS = 10;
 constexpr int PRE_ALLOCATE_TEXTURES = 32; //pow(2, PRE_ALLOCATE_OBJECTS_BITS);
 
-/*
-Keeps track which Ids are available (NOT which are used).
-Initialize this with an array containing all allowed Ids, setting the size to the size of that list and not touching the offset.
-fetch_id will then always return an unused Id, while return_id will mark that id as usable.
-*/
-struct IdStack 
+                                          /*
+                                          Keeps track which Ids are available (NOT which are used).
+                                          Initialize this with an array containing all allowed Ids, setting the size to the size of that list and not touching the offset.
+                                          fetch_id will then always return an unused Id, while return_id will mark that id as usable.
+                                          */
+struct IdStack
 {
     unsigned int offset;
-    unsigned int max_offset; 
+    unsigned int max_offset;
     int * id_list;
 };
 
@@ -110,7 +110,7 @@ struct Model
 };
 
 int create_texture(Model * model, VertexArray texture) {
-    if (texture.length != model->vertex_count) {
+    if (texture.length / 3 != model->vertex_count) {
         PRINT "Texture point count does not match model size!\n";
         return -1;
     }
@@ -122,21 +122,21 @@ int create_texture(Model * model, VertexArray texture) {
     return id;
 }
 
-Model create_model(int vertex_count, GLfloat * vertex_data) {
-    std::cout << "\n";
+Model create_model(int index_count, GLfloat * vertex_data) {
+    PRINT index_count << " vertices\n";
 
     Model model = Model();
     glGenBuffers(1, &model.vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, model.vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(vertex_data), vertex_data, GL_STATIC_DRAW);
-    model.vertex_count = vertex_count;
+    glBufferData(GL_ARRAY_BUFFER, index_count * sizeof(vertex_data), vertex_data, GL_STATIC_DRAW);
+    model.vertex_count = index_count / 3;
 
-    GLfloat * default_texture_data = (GLfloat*)malloc(vertex_count * sizeof(default_texture_data));
-    for (int i = 0; i < vertex_count; i++) {
+    GLfloat * default_texture_data = (GLfloat*)malloc(index_count * sizeof(default_texture_data));
+    for (int i = 0; i < index_count; i++) {
         default_texture_data[i] = 1;
     }
     VertexArray texture;
-    texture.length = vertex_count;
+    texture.length = index_count;
     texture.vertex_list = default_texture_data;
     create_texture(&model, texture);
     free(default_texture_data);
@@ -159,6 +159,11 @@ GLFWwindow * init() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    
+    // Enable depth test
+    glEnable(GL_DEPTH_TEST);
+    // Accept fragment if it closer to the camera than the former one
+    glDepthFunc(GL_LESS);
     PRINT "Successfully initialized GLFW! \n";
 
     PRINT "Initializing Window!\n";
@@ -201,7 +206,7 @@ void show_object(RenderObject object, Model * models, Shader shader, Camera came
 
     // 1rst attribute buffer : vertices
 
-        // Use our shader
+    // Use our shader
     glUseProgram(shader.program_id);
     glUniformMatrix4fv(shader.mvp_handle, 1, GL_FALSE, &mvp[0][0]);
 
@@ -238,7 +243,7 @@ int render(EngineInterface * interface)
 {
     PRINT "Launching Engine! \n";
     GLFWwindow * window = init();
-    
+
     //Enable key capturing.
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
@@ -260,10 +265,10 @@ int render(EngineInterface * interface)
     //Initialize default camera.
     //TODO: UI camera
     Camera cams[PRE_ALLOCATE_OBJECTS];
-    cams[0].projection_matrix = glm::perspective(glm::radians(45.0f), (float) 4.0f / (float)3.0f, 0.1f, 1000.0f);
+    cams[0].projection_matrix = glm::perspective(glm::radians(45.0f), (float) 4.0f / (float)3.0f, 0.1f, 100.0f);
     cams[0].view_matrix = glm::lookAt(
-        glm::vec3(0, 0, 3), // Camera is at (4,3,3), in World Space
-        glm::vec3(0, 0, 0), // and looks at the origin
+        glm::vec3(0, 0, 0), // Camera is at (0,0,0), in World Space
+        glm::vec3(0, 0, -1), // and looks along Z
         glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
     );
 
@@ -271,7 +276,7 @@ int render(EngineInterface * interface)
     do {
 
         // Clear the screen
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         for (int i = 0; i < PRE_ALLOCATE_OBJECTS; i++) {
             if (objects[i].show) {

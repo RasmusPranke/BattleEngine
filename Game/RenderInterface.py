@@ -1,5 +1,6 @@
 import numpy as np
 from multiprocessing import Process, Pipe
+import math
 
 import Render
 
@@ -102,7 +103,10 @@ def moveCam(vector):
     render_gameSide.send((25, (0, (vector[0],vector[1],vector[2]))))
 
 def rotateCam(vector, amount):
-    render_gameSide.send((26, (0, (vector[0],vector[1],vector[2]), amount)))
+    render_gameSide.send((26, (0, (vector[0],vector[1],vector[2]), amount*math.pi)))
+
+def lookAt(vector):
+    render_gameSide.send((27, (0, (vector[0],vector[1],vector[2]))))
 
 def stop():
   render_gameSide.send((0, None))

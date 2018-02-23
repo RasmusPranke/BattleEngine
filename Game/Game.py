@@ -122,10 +122,28 @@ class Game:
         input("Press Enter to continue...")
         RI.rotateCam((0,1,0), 0.25)
       '''
-      RI.moveCam((0,0,-5))
-      while True:
+      #RI.moveCam((10, 10, 10))
+      #RI.lookAt((0,0,0))
+      from Blocks import BlockTypes, showBlock
+
+      blocks = {(0,0,1): BlockTypes.GRASS,
+                (0,0,-1): BlockTypes.WALL,
+                (0,1,0): BlockTypes.IRONORE,
+                (0,-1,0): BlockTypes.WOOD,
+                (1,0,0): BlockTypes.MUSTARDGAS,
+                (-1,0,0): BlockTypes.AIR,}
+
+      for i in blocks:
+          id = RI.createObject()
+          RI.move(id, i)
+          showBlock(blocks[i], id)
+
+      for i in range(4):
         input("Press Enter to continue...")
-        RI.rotateCam((0, 1, 0), 0.2)
+        RI.moveCam((0,0,-1))
+        #RI.rotateCam((0, 1, 0), 0.25)
+        
+      input("Press Enter to continue...")
       
     def __init__(self, inPipe):
         self.actionList = {}
