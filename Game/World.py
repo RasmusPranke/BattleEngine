@@ -52,7 +52,7 @@ class World:
                     self.grid[x,y,z] = BlockTypes.AIR
         self.size = size
         self.height = height
-        '''
+
         print("Registering world blocks!")
         for x,y,z in itertools.product(range(size), range(height), range(size)):
             block = self.grid[x, y, z][0]
@@ -61,4 +61,4 @@ class World:
             TId = getTexture(block)
             RI.setTexture(id, TId)
             RI.move(id, (x,y,z))
-            RI.setVisible(id, block.show)'''
+            RI.setVisible(id, block.show)

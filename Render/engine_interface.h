@@ -36,8 +36,9 @@ Operation  | OpId | Argument                 | Comment
 
  Camera Operations
  MoveCam   |  25   | (CId, Vector3)      | Translates the given Camera by the given Vector.
- RotateCam |  26   | (CId,Vector3,radian)| Rotates the Camera radians around the axis given by the vector
+ Rotate Cam|  26   | (CId,Vector3,radian)| Rotates the Camera radians around the axis given by the vector
  LookAt    |  27   | (CId, Vector3)      | Rotates the Camera to look at the given position.
+ Pivot Cam |  28   | (CId,Vector3,radian)| Rotates the Camera around the Point it is currently looking at.
 
  Texture Operations
  CreateT   |  31  |(MId, [Texture Points...])| Takes a list of colors for a model and sends back the ID of the Texture.

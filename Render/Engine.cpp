@@ -5,6 +5,7 @@
 #include <glfw3.h>
 #include <glm\glm.hpp>
 #include <glm\gtc\matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 #include "Utility.h"
 #include "Engine.h"
@@ -30,11 +31,11 @@ constexpr int PRE_ALLOCATE_MODELS = 128; //pow(2, PRE_ALLOCATE_OBJECTS_BITS);
                                          //const int PRE_ALLOCATE_TEXTURES_BITS = 10;
 constexpr int PRE_ALLOCATE_TEXTURES = 32; //pow(2, PRE_ALLOCATE_OBJECTS_BITS);
 
-                                          /*
-                                          Keeps track which Ids are available (NOT which are used).
-                                          Initialize this with an array containing all allowed Ids, setting the size to the size of that list and not touching the offset.
-                                          fetch_id will then always return an unused Id, while return_id will mark that id as usable.
-                                          */
+/*
+Keeps track which Ids are available (NOT which are used).
+Initialize this with an array containing all allowed Ids, setting the size to the size of that list and not touching the offset.
+fetch_id will then always return an unused Id, while return_id will mark that id as usable.
+*/
 struct IdStack
 {
     unsigned int offset;
@@ -95,9 +96,19 @@ struct RenderObject
 };
 
 struct Camera {
-    glm::mat4 view_matrix;
-    glm::mat4 projection_matrix;
+    glm::mat4 projection_matrix = glm::perspective(glm::radians(45.0f), (float) 4.0f / (float)3.0f, 0.1f, 100.0f);
+    glm::vec3 pos = glm::vec3(0,0,0);
+    glm::vec3 looking_at = glm::vec3(0, 0, -1);
+    glm::vec3 up = glm::vec3(0, 1, 0);
 };
+
+glm::mat4 get_view_matrix(Camera cam) {
+    return glm::lookAt(cam.pos, cam.looking_at, cam.up);
+}
+
+glm::mat4 get_projection_matrix(Camera cam) {
+    return cam.projection_matrix;
+}
 
 struct Model
 {
@@ -159,11 +170,6 @@ GLFWwindow * init() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    
-    // Enable depth test
-    glEnable(GL_DEPTH_TEST);
-    // Accept fragment if it closer to the camera than the former one
-    glDepthFunc(GL_LESS);
     PRINT "Successfully initialized GLFW! \n";
 
     PRINT "Initializing Window!\n";
@@ -195,6 +201,13 @@ GLFWwindow * init() {
     glBindVertexArray(vertexArrayId);
     PRINT "Successfully created VAO!\n";
 
+    PRINT "Enablindg Depth!\n";
+    // Enable depth test
+    glEnable(GL_DEPTH_TEST);
+    // Accept fragment if it closer to the camera than the former one
+    glDepthFunc(GL_LESS);
+    PRINT "Successfully enabled depth!\n";
+
     return window;
 }
 
@@ -202,7 +215,7 @@ void show_object(RenderObject object, Model * models, Shader shader, Camera came
     Model model = models[object.model];
 
     //Calculate the MVP matrix
-    glm::mat4 mvp = camera.projection_matrix * camera.view_matrix * object.model_matrix;
+    glm::mat4 mvp = get_projection_matrix(camera) * get_view_matrix(camera) * object.model_matrix;
 
     // 1rst attribute buffer : vertices
 
@@ -265,12 +278,7 @@ int render(EngineInterface * interface)
     //Initialize default camera.
     //TODO: UI camera
     Camera cams[PRE_ALLOCATE_OBJECTS];
-    cams[0].projection_matrix = glm::perspective(glm::radians(45.0f), (float) 4.0f / (float)3.0f, 0.1f, 100.0f);
-    cams[0].view_matrix = glm::lookAt(
-        glm::vec3(0, 0, 0), // Camera is at (0,0,0), in World Space
-        glm::vec3(0, 0, -1), // and looks along Z
-        glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
-    );
+    cams[0] = Camera();
 
     int msg_id;
     do {
@@ -370,14 +378,31 @@ int render(EngineInterface * interface)
             {
                 IdVectorTuple movement = interface->getVector();
                 PRINT "Translating Camera " << movement.id << " by " << movement.change.x << " " << movement.change.y << " " << movement.change.z << " " << "!\n";
-                cams[movement.id].view_matrix = glm::translate(cams[movement.id].view_matrix, movement.change);
+                cams[movement.id].pos -= movement.change;
+                cams[movement.id].looking_at -= movement.change;
                 break;
             }
             case 26: //Rotate an Camera
             {
                 IdRotationTuple rotation = interface->getRotation();
                 PRINT "Rotating Camera " << rotation.id << " around " << rotation.axis.x << " " << rotation.axis.y << " " << rotation.axis.z << " by " << rotation.rotation_in_2pi << "!\n";
-                cams[rotation.id].view_matrix = glm::rotate(cams[rotation.id].view_matrix, -rotation.rotation_in_2pi, rotation.axis);
+                Camera * cam = &cams[rotation.id];
+                cam->looking_at = cam->pos + (glm::angleAxis(rotation.rotation_in_2pi, rotation.axis) * (cam->looking_at - cam->pos));
+                break;
+            }
+            case 27: //Focus Camera on certain point
+            {
+                IdVectorTuple target = interface->getVector();
+                PRINT "Focusign Camera " << target.id << " at " << target.change.x << " " << target.change.y << " " << target.change.z << "!\n";
+                cams[target.id].looking_at = target.change;
+                break;
+            }
+            case 28: //Rotate Camera around its focus.
+            {
+                IdRotationTuple rotation = interface->getRotation();
+                PRINT "Rotating Camera " << rotation.id << " around " << rotation.axis.x << " " << rotation.axis.y << " " << rotation.axis.z << " by " << rotation.rotation_in_2pi << "!\n";
+                Camera * cam = &cams[rotation.id];
+                cam->pos = cam->looking_at + (glm::angleAxis(rotation.rotation_in_2pi, rotation.axis) * (cam->pos - cam->looking_at));
                 break;
             }
             case 31: //Load an Texture as an Array

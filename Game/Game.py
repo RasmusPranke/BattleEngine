@@ -124,24 +124,14 @@ class Game:
       '''
       #RI.moveCam((10, 10, 10))
       #RI.lookAt((0,0,0))
-      from Blocks import BlockTypes, showBlock
-
-      blocks = {(0,0,1): BlockTypes.GRASS,
-                (0,0,-1): BlockTypes.WALL,
-                (0,1,0): BlockTypes.IRONORE,
-                (0,-1,0): BlockTypes.WOOD,
-                (1,0,0): BlockTypes.MUSTARDGAS,
-                (-1,0,0): BlockTypes.AIR,}
-
-      for i in blocks:
-          id = RI.createObject()
-          RI.move(id, i)
-          showBlock(blocks[i], id)
-
-      for i in range(4):
+      
+      RI.moveCam((0,0,10))
+      RI.lookAt((0,3,0))
+      for i in range(20):
         input("Press Enter to continue...")
-        RI.moveCam((0,0,-1))
+        #RI.moveCam((0,0,-1))
         #RI.rotateCam((0, 1, 0), 0.25)
+        RI.pivotCam((0, 1, 0), 0.05)
         
       input("Press Enter to continue...")
       

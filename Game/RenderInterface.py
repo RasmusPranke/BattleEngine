@@ -103,7 +103,10 @@ def moveCam(vector):
     render_gameSide.send((25, (0, (vector[0],vector[1],vector[2]))))
 
 def rotateCam(vector, amount):
-    render_gameSide.send((26, (0, (vector[0],vector[1],vector[2]), amount*math.pi)))
+    render_gameSide.send((26, (0, (vector[0],vector[1],vector[2]), amount*2*math.pi)))
+
+def pivotCam(vector, amount):
+    render_gameSide.send((28, (0, (vector[0],vector[1],vector[2]), amount*2*math.pi)))
 
 def lookAt(vector):
     render_gameSide.send((27, (0, (vector[0],vector[1],vector[2]))))
