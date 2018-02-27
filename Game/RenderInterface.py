@@ -96,11 +96,16 @@ def scale(OId, vector):
     '''Scales OId by Vector.
        Expects any object with vaild numbers accessible via indices 0-2 as vector.'''
     render_gameSide.send((7, (OId, (vector[0],vector[1],vector[2]))))
-
+    
 def moveCam(vector):
     '''Moves OId by Vector.
        Expects any object with vaild numbers accessible via indices 0-2 as vector.'''
     render_gameSide.send((25, (0, (vector[0],vector[1],vector[2]))))
+
+def setCam(vector):
+    '''Moves OId by Vector.
+       Expects any object with vaild numbers accessible via indices 0-2 as vector.'''
+    render_gameSide.send((29, (0, (vector[0],vector[1],vector[2]))))
 
 def rotateCam(vector, amount):
     render_gameSide.send((26, (0, (vector[0],vector[1],vector[2]), amount*2*math.pi)))

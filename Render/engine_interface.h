@@ -36,6 +36,7 @@ Operation  | OpId | Argument                 | Comment
 
  Camera Operations
  MoveCam   |  25   | (CId, Vector3)      | Translates the given Camera by the given Vector.
+ SetCam    |  29   | (CId, Vector3)      | Sets the position of the given Camera to the given Vector.
  Rotate Cam|  26   | (CId,Vector3,radian)| Rotates the Camera radians around the axis given by the vector
  LookAt    |  27   | (CId, Vector3)      | Rotates the Camera to look at the given position.
  Pivot Cam |  28   | (CId,Vector3,radian)| Rotates the Camera around the Point it is currently looking at.

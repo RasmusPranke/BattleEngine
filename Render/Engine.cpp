@@ -382,6 +382,16 @@ int render(EngineInterface * interface)
                 cams[movement.id].looking_at -= movement.change;
                 break;
             }
+            case 29: //Set an Camera position
+            {
+                IdVectorTuple movement = interface->getVector();
+                PRINT "Translating Camera " << movement.id << " to " << movement.change.x << " " << movement.change.y << " " << movement.change.z << " " << "!\n";
+                Camera * cam = &cams[movement.id];
+                glm::vec3 diff = cam->pos - movement.change;
+                cam->pos -= diff;
+                cam->looking_at -= diff;
+                break;
+            }
             case 26: //Rotate an Camera
             {
                 IdRotationTuple rotation = interface->getRotation();
